@@ -277,3 +277,26 @@ smartmater-hub-vue/
 ---
 
 智能物料管理系统 - 让物料管理更智能、更高效！
+
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/939d9d06-ad1b-4503-97b9-077250ee159d" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/b45bf82c-b713-41b4-9b43-c481987df980" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/cfc43701-200a-4a20-9505-cc1085454342" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/316c14cb-8aef-4dbc-a63c-0005b60bb112" />
+<img width="1919" height="1032" alt="image" src="https://github.com/user-attachments/assets/17223a74-1e38-4c67-87a8-f2c91bca5b9d" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/09a674b5-a414-42eb-9d65-9521b1216619" />
+<img width="1919" height="1032" alt="image" src="https://github.com/user-attachments/assets/4549220b-1fc2-49cf-8bca-6afddf93fea9" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/92d74bf3-8959-4e1f-a884-4657c9a95d16" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/124c5a96-c6ed-4eb3-8b12-a1458fd5018a" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/529f8a0f-7dc5-4831-8ec0-7baadf4a577b" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/1e643d01-412b-4fae-8633-8e418191182f" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/e5cde65a-3e29-4ad4-a3f5-f46f04d0c982" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/7625280b-8bb9-4aed-9146-e2a071144d3e" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/ebf75949-f7e3-4eec-9ead-c253c100924e" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/43409fc3-cc21-4047-a788-4d3fed4915d2" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/767b2cfe-535a-4a04-a28f-884e08ebbb26" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/5b11c488-df16-4d7e-b6da-da320e91cbf6" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/03f3e7b1-3ca9-4880-bbdd-234dff9ef2de" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/cc48eaf9-222f-4bb6-9e2e-5a6c41ddc37f" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/08a3b6e8-b94c-41f2-80e6-aa9489bccf64" />
+
+
