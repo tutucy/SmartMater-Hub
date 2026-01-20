@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -41,6 +42,14 @@ public class UserController {
     public Result<String> update(@RequestBody User user) {
         userService.update(user);
         return Result.success("更新成功");
+    }
+
+    @PutMapping("/{id}/password")
+    public Result<String> resetPassword(@PathVariable Integer id, @RequestBody Map<String, String> params) {
+        String password = params.get("password");
+        String oldPassword = params.get("oldPassword");
+        userService.resetPassword(id, password, oldPassword);
+        return Result.success("密码重置成功");
     }
 
     @DeleteMapping("/{id}")

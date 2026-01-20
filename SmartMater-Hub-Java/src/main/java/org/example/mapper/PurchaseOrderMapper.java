@@ -2,6 +2,7 @@ package org.example.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.example.dto.PurchaseOrderDTO;
 import org.example.entity.PurchaseOrder;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public interface PurchaseOrderMapper {
     List<PurchaseOrder> selectList(@Param("orderNo") String orderNo, @Param("supplierId") Integer supplierId, @Param("status") Integer status);
 
     int insert(PurchaseOrder order);
+
+    int insertDTO(PurchaseOrderDTO orderDTO);
 
     int update(PurchaseOrder order);
 

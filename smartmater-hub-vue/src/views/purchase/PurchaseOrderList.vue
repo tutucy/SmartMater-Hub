@@ -216,11 +216,9 @@
                 placeholder="请选择订单状态"
                 clearable
               >
-                <el-option label="待审批" value="pending" />
-                <el-option label="已批准" value="approved" />
-                <el-option label="已拒绝" value="rejected" />
-                <el-option label="已发货" value="shipped" />
-                <el-option label="已完成" value="completed" />
+                <el-option label="待审核" value="pending" />
+                <el-option label="已审核" value="approved" />
+                <el-option label="已入库" value="received" />
                 <el-option label="已取消" value="canceled" />
               </el-select>
             </el-form-item>
@@ -342,6 +340,86 @@
       </template>
     </el-dialog>
     
+    <!-- 订单详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      :title="`订单详情 - ${currentOrder.orderNo}`"
+      width="1000px"
+      @close="handleDetailDialogClose"
+    >
+      <div v-loading="detailLoading" class="order-detail-container">
+        <!-- 订单基本信息 -->
+        <el-descriptions :column="2" border class="order-info">
+          <el-descriptions-item label="订单编号">{{ currentOrder.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="供应商">{{ currentOrder.supplierName }}</el-descriptions-item>
+          <el-descriptions-item label="订单金额">¥{{ currentOrder.totalAmount ? currentOrder.totalAmount.toFixed(2) : '0.00' }}</el-descriptions-item>
+          <el-descriptions-item label="下单日期">{{ currentOrder.orderDate }}</el-descriptions-item>
+          <el-descriptions-item label="预计到货日期">{{ currentOrder.expectedDate }}</el-descriptions-item>
+          <el-descriptions-item label="实际到货日期">{{ currentOrder.actualDate || '未到货' }}</el-descriptions-item>
+          <el-descriptions-item label="订单状态">
+            <el-tag :type="getStatusColor(currentOrder.status)">
+              {{ getStatusName(currentOrder.status) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="操作人">{{ currentOrder.operator }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ currentOrder.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ currentOrder.updateTime }}</el-descriptions-item>
+        </el-descriptions>
+        
+        <!-- 订单明细 -->
+        <h3 class="detail-title">订单明细</h3>
+        <el-table
+          :data="orderDetails"
+          style="width: 100%"
+          border
+          max-height="300"
+        >
+          <el-table-column prop="materialName" label="物资名称" width="200" />
+          <el-table-column prop="specification" label="规格型号" width="180" />
+          <el-table-column prop="unit" label="单位" width="80" />
+          <el-table-column prop="quantity" label="采购数量" width="120" align="center" />
+          <el-table-column prop="price" label="单价" width="120" align="right">
+            <template #default="scope">
+              ¥{{ scope.row.price ? scope.row.price.toFixed(2) : '0.00' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="amount" label="金额" width="120" align="right">
+            <template #default="scope">
+              ¥{{ scope.row.amount ? scope.row.amount.toFixed(2) : '0.00' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="remark" label="备注" min-width="150" />
+        </el-table>
+        
+        <!-- 合计信息 -->
+        <div class="summary-info">
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="物资种类">{{ orderDetails.length }} 种</el-descriptions-item>
+            <el-descriptions-item label="总数量">{{ totalDetailQuantity }} 件</el-descriptions-item>
+            <el-descriptions-item label="总金额">¥{{ totalDetailAmount.toFixed(2) }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+        
+        <!-- 备注信息 -->
+        <h3 class="detail-title">备注信息</h3>
+        <div class="remark-info">
+          <el-input
+            v-model="currentOrder.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="暂无备注"
+            readonly
+          />
+        </div>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
     <!-- 订单跟踪对话框 -->
     <el-dialog
       v-model="trackDialogVisible"
@@ -408,6 +486,10 @@ const currentOrder = ref({})
 const trackDialogVisible = ref(false)
 const logisticsLogs = ref([])
 
+// 订单详情对话框相关
+const detailDialogVisible = ref(false)
+const orderDetails = ref([])
+
 // 订单表单数据
 const orderForm = reactive({
   id: '',
@@ -456,6 +538,15 @@ const totalQuantity = computed(() => {
 
 const totalAmount = computed(() => {
   return orderForm.details.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+})
+
+// 订单详情合计
+const totalDetailQuantity = computed(() => {
+  return orderDetails.value.reduce((sum, item) => sum + item.quantity, 0)
+})
+
+const totalDetailAmount = computed(() => {
+  return orderDetails.value.reduce((sum, item) => sum + (item.quantity * item.price), 0)
 })
 
 // 获取订单列表
@@ -570,9 +661,33 @@ const handleAddOrder = () => {
 }
 
 // 处理查看订单
-const handleViewOrder = (row) => {
-  console.log('查看订单:', row)
-  ElMessage.info('查看订单详情功能开发中...')
+const handleViewOrder = async (row) => {
+  try {
+    detailLoading.value = true
+    currentOrder.value = row
+    
+    // 获取订单详情
+    const response = await request.get(`/purchase-order/${row.id}`)
+    const orderData = response.data
+    
+    // 更新当前订单信息
+    Object.assign(currentOrder.value, orderData)
+    
+    // 获取订单明细
+    const itemResponse = await request.get('/purchase-order-item/list', {
+      params: {
+        orderId: row.id
+      }
+    })
+    orderDetails.value = itemResponse.data || []
+    
+    detailDialogVisible.value = true
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    ElMessage.error('获取订单详情失败')
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 // 处理审批订单
@@ -741,7 +856,14 @@ const handleDialogClose = () => {
 
 // 处理跟踪对话框关闭
 const handleTrackDialogClose = () => {
+  trackDialogVisible.value = false
   logisticsLogs.value = []
+}
+
+// 处理详情对话框关闭
+const handleDetailDialogClose = () => {
+  detailDialogVisible.value = false
+  orderDetails.value = []
 }
 
 // 处理保存订单
@@ -859,6 +981,34 @@ const selectedOrders = ref([])
 .pagination {
   display: flex;
   justify-content: flex-end;
+}
+
+.order-detail-container {
+  padding: 20px;
+}
+
+.order-info {
+  margin-bottom: 30px;
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 20px 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.summary-info {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.remark-info {
+  margin-top: 20px;
 }
 
 /* 响应式设计 */

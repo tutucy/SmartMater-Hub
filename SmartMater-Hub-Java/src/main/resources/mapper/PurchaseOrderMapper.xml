@@ -43,6 +43,11 @@
         VALUES (#{orderNo}, #{supplierId}, #{totalAmount}, #{status}, #{remark}, #{creatorId})
     </insert>
 
+    <insert id="insertDTO" parameterType="org.example.dto.PurchaseOrderDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO purchase_order (order_no, supplier_id, total_amount, status, remark, creator_id)
+        VALUES (#{orderNo}, #{supplierId}, #{totalAmount}, #{status}, #{remark}, #{creatorId})
+    </insert>
+
     <update id="update" parameterType="org.example.entity.PurchaseOrder">
         UPDATE purchase_order
         <set>

@@ -15,14 +15,37 @@
         SELECT * FROM purchase_order_item WHERE id = #{id}
     </select>
 
-    <select id="selectByOrderId" resultMap="BaseResultMap">
-        SELECT * FROM purchase_order_item WHERE order_id = #{orderId}
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT poi.*, m.name as material_name, m.specification, m.unit
+        FROM purchase_order_item poi
+        LEFT JOIN material m ON poi.material_id = m.id
+        <where>
+            <if test="orderId != null">
+                AND poi.order_id = #{orderId}
+            </if>
+        </where>
+        ORDER BY poi.id
     </select>
 
     <insert id="insert" parameterType="org.example.entity.PurchaseOrderItem" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO purchase_order_item (order_id, material_id, quantity, price, amount)
         VALUES (#{orderId}, #{materialId}, #{quantity}, #{price}, #{amount})
     </insert>
+
+    <update id="update" parameterType="org.example.entity.PurchaseOrderItem">
+        UPDATE purchase_order_item
+        <set>
+            <if test="materialId != null">material_id = #{materialId},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="amount != null">amount = #{amount},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM purchase_order_item WHERE id = #{id}
+    </delete>
 
     <delete id="deleteByOrderId">
         DELETE FROM purchase_order_item WHERE order_id = #{orderId}

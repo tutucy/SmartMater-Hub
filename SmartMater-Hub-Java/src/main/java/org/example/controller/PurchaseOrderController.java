@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import org.example.common.Result;
+import org.example.dto.PurchaseOrderDTO;
 import org.example.entity.PurchaseOrder;
 import org.example.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,8 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/add")
-    public Result<String> add(@RequestBody PurchaseOrder order) {
-        purchaseOrderService.add(order);
+    public Result<String> add(@RequestBody PurchaseOrderDTO orderDTO) {
+        purchaseOrderService.addWithItems(orderDTO);
         return Result.success("添加成功");
     }
 

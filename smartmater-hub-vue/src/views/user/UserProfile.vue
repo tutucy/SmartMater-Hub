@@ -26,9 +26,9 @@
               />
             </el-form-item>
             
-            <el-form-item label="姓名" prop="name">
+            <el-form-item label="姓名" prop="realName">
               <el-input
-                v-model="userInfo.name"
+                v-model="userInfo.realName"
                 placeholder="请输入姓名"
                 clearable
               />
@@ -53,34 +53,26 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="部门" prop="department">
+            <el-form-item label="角色ID" prop="roleId">
               <el-input
-                v-model="userInfo.department"
-                placeholder="请输入部门"
-                clearable
-              />
-            </el-form-item>
-            
-            <el-form-item label="职位" prop="position">
-              <el-input
-                v-model="userInfo.position"
-                placeholder="请输入职位"
-                clearable
-              />
-            </el-form-item>
-            
-            <el-form-item label="角色" prop="role">
-              <el-input
-                v-model="userInfo.role"
-                placeholder="请输入角色"
+                v-model="userInfo.roleId"
+                placeholder="角色ID"
                 readonly
               />
             </el-form-item>
             
-            <el-form-item label="最后登录时间" prop="lastLoginTime">
+            <el-form-item label="状态" prop="status">
               <el-input
-                v-model="userInfo.lastLoginTime"
-                placeholder="最后登录时间"
+                v-model="userInfo.status"
+                placeholder="状态"
+                readonly
+              />
+            </el-form-item>
+            
+            <el-form-item label="创建时间" prop="createTime">
+              <el-input
+                v-model="userInfo.createTime"
+                placeholder="创建时间"
                 readonly
               />
             </el-form-item>
@@ -149,14 +141,14 @@ const updatingPassword = ref(false)
 
 // 用户信息
 const userInfo = reactive({
-  username: 'admin',
-  name: '管理员',
-  email: 'admin@example.com',
-  phone: '13800138000',
-  department: '技术部',
-  position: '系统管理员',
-  role: 'admin',
-  lastLoginTime: '2024-01-01 10:00:00'
+  id: '',
+  username: '',
+  realName: '',
+  email: '',
+  phone: '',
+  roleId: '',
+  status: '',
+  createTime: ''
 })
 
 // 密码表单
@@ -168,7 +160,7 @@ const passwordForm = reactive({
 
 // 表单验证规则
 const profileRules = {
-  name: [
+  realName: [
     { required: true, message: '请输入姓名', trigger: 'blur' }
   ],
   email: [
@@ -178,13 +170,16 @@ const profileRules = {
   phone: [
     { required: true, message: '请输入电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ],
-  department: [
-    { required: true, message: '请输入部门', trigger: 'blur' }
-  ],
-  position: [
-    { required: true, message: '请输入职位', trigger: 'blur' }
   ]
+}
+
+// 验证确认密码
+const validateConfirmPassword = (rule, value, callback) => {
+  if (value !== passwordForm.newPassword) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
 }
 
 // 密码验证规则
@@ -202,15 +197,6 @@ const passwordRules = {
   ]
 }
 
-// 验证确认密码
-const validateConfirmPassword = (rule, value, callback) => {
-  if (value !== passwordForm.newPassword) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
-  }
-}
-
 // 保存个人信息
 const handleSaveProfile = async () => {
   if (!profileFormRef.value) return
@@ -220,10 +206,7 @@ const handleSaveProfile = async () => {
     if (valid) {
       saving.value = true
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('保存个人信息:', userInfo)
+      await request.put('/user/update', userInfo)
       ElMessage.success('个人信息保存成功')
     }
   } catch (error) {
@@ -239,15 +222,14 @@ const handleUpdatePassword = async () => {
   if (!profileFormRef.value) return
   
   try {
-    // 验证密码表单
     const valid = await profileFormRef.value.validateField(['oldPassword', 'newPassword', 'confirmPassword'])
     if (valid) {
       updatingPassword.value = true
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('更新密码:', passwordForm)
+      await request.put(`/user/${userInfo.id}/password`, {
+        oldPassword: passwordForm.oldPassword,
+        password: passwordForm.newPassword
+      })
       ElMessage.success('密码更新成功')
       
       // 清空密码表单
@@ -264,9 +246,17 @@ const handleUpdatePassword = async () => {
 }
 
 // 页面挂载时获取用户信息
-onMounted(() => {
-  // 模拟获取用户信息
-  console.log('获取用户信息')
+onMounted(async () => {
+  try {
+    const response = await request.get('/user/list')
+    if (response.data && response.data.length > 0) {
+      const currentUser = response.data[0]
+      Object.assign(userInfo, currentUser)
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    ElMessage.error('获取用户信息失败')
+  }
 })
 </script>
 

@@ -652,9 +652,41 @@ const handleCurrentChange = (newPage) => {
 }
 
 // 页面挂载时获取入库记录
-onMounted(() => {
-  fetchInboundRecords()
+onMounted(async () => {
+  await fetchInboundRecords()
+  await fetchSuppliers()
+  await fetchPurchaseOrders()
 })
+
+// 获取供应商列表
+const fetchSuppliers = async () => {
+  try {
+    const response = await request.get('/supplier/list', {
+      params: {
+        status: 1
+      }
+    })
+    suppliers.value = response.data || []
+  } catch (error) {
+    console.error('获取供应商列表失败:', error)
+    ElMessage.error('获取供应商列表失败')
+  }
+}
+
+// 获取采购订单列表
+const fetchPurchaseOrders = async () => {
+  try {
+    const response = await request.get('/purchase-order/list', {
+      params: {
+        status: 2
+      }
+    })
+    purchaseOrders.value = response.data || []
+  } catch (error) {
+    console.error('获取采购订单列表失败:', error)
+    ElMessage.error('获取采购订单列表失败')
+  }
+}
 
 // 选择的记录
 const selectedRecords = ref([])

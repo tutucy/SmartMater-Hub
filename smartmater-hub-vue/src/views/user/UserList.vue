@@ -38,15 +38,13 @@
           <el-table-column type="selection" width="55" />
           <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="username" label="用户名" width="150" />
-          <el-table-column prop="name" label="姓名" width="120" />
+          <el-table-column prop="realName" label="姓名" width="120" />
           <el-table-column prop="email" label="邮箱" width="200" />
           <el-table-column prop="phone" label="电话" width="150" />
-          <el-table-column prop="department" label="部门" width="150" />
-          <el-table-column prop="position" label="职位" width="150" />
-          <el-table-column prop="role" label="角色" width="120">
+          <el-table-column prop="roleId" label="角色ID" width="120">
             <template #default="scope">
-              <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'success'">
-                {{ scope.row.role || '普通用户' }}
+              <el-tag :type="scope.row.roleId === 1 ? 'danger' : 'success'">
+                {{ scope.row.roleId === 1 ? '管理员' : '普通用户' }}
               </el-tag>
             </template>
           </el-table-column>
@@ -60,7 +58,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column prop="lastLoginTime" label="最后登录时间" width="180" />
+          <el-table-column prop="createTime" label="创建时间" width="180" />
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="scope">
               <el-button type="primary" size="small" @click="handleEditUser(scope.row)" icon="Edit">
@@ -133,9 +131,9 @@
           />
         </el-form-item>
         
-        <el-form-item label="姓名" prop="name">
+        <el-form-item label="姓名" prop="realName">
           <el-input
-            v-model="userForm.name"
+            v-model="userForm.realName"
             placeholder="请输入姓名"
             clearable
           />
@@ -158,43 +156,18 @@
           />
         </el-form-item>
         
-        <el-form-item label="部门" prop="department">
+        <el-form-item label="角色" prop="roleId">
           <el-select
-            v-model="userForm.department"
-            placeholder="请选择部门"
-            clearable
-          >
-            <el-option label="采购部" value="采购部" />
-            <el-option label="仓库管理部" value="仓库管理部" />
-            <el-option label="生产部" value="生产部" />
-            <el-option label="财务部" value="财务部" />
-            <el-option label="行政部" value="行政部" />
-            <el-option label="技术部" value="技术部" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="职位" prop="position">
-          <el-input
-            v-model="userForm.position"
-            placeholder="请输入职位"
-            clearable
-          />
-        </el-form-item>
-        
-        <el-form-item label="角色" prop="role">
-          <el-select
-            v-model="userForm.role"
+            v-model="userForm.roleId"
             placeholder="请选择角色"
             clearable
           >
-            <el-option label="管理员" value="admin" />
-            <el-option label="采购员" value="purchaser" />
-            <el-option label="仓库管理员" value="warehouse_manager" />
-            <el-option label="普通员工" value="employee" />
+            <el-option label="管理员" :value="1" />
+            <el-option label="普通用户" :value="2" />
           </el-select>
         </el-form-item>
         
-        <el-form-item label="状态">
+        <el-form-item label="状态" prop="status">
           <el-switch
             v-model="userForm.status"
             active-value="1"
@@ -226,6 +199,8 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchKeyword = ref('')
+const searchRole = ref('')
+const searchStatus = ref('')
 const selectedUsers = ref([])
 
 // 对话框相关
@@ -240,12 +215,10 @@ const userForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  name: '',
+  realName: '',
   email: '',
   phone: '',
-  department: '',
-  position: '',
-  role: '',
+  roleId: '',
   status: '1'
 })
 
@@ -272,25 +245,17 @@ const userRules = {
     { required: true, message: '请再次输入密码', trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
   ],
-  name: [
+  realName: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
     { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
   ],
   email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ],
   phone: [
-    { required: true, message: '请输入电话', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ],
-  department: [
-    { required: true, message: '请选择部门', trigger: 'change' }
-  ],
-  position: [
-    { required: true, message: '请输入职位', trigger: 'blur' }
-  ],
-  role: [
+  roleId: [
     { required: true, message: '请选择角色', trigger: 'change' }
   ]
 }
@@ -337,12 +302,10 @@ const handleAddUser = () => {
     username: '',
     password: '',
     confirmPassword: '',
-    name: '',
+    realName: '',
     email: '',
     phone: '',
-    department: '',
-    position: '',
-    role: '',
+    roleId: '',
     status: '1'
   })
   dialogVisible.value = true
@@ -370,16 +333,13 @@ const handleSaveUser = async () => {
       const userData = { ...userForm }
       delete userData.confirmPassword
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       if (userForm.id) {
         // 编辑用户
-        console.log('编辑用户:', userData)
+        await request.put('/user/update', userData)
         ElMessage.success('用户编辑成功')
       } else {
         // 添加用户
-        console.log('添加用户:', userData)
+        await request.post('/user/add', userData)
         ElMessage.success('用户添加成功')
       }
       
@@ -418,13 +378,9 @@ const handleResetPassword = (row) => {
       type: 'warning'
     }
   )
-  .then(({ value }) => {
+  .then(async ({ value }) => {
     // 调用重置密码API
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('重置密码:', row)
+    await request.put(`/user/${row.id}/password`, { password: value })
     ElMessage.success('密码重置成功')
   })
   .catch(() => {

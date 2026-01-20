@@ -46,9 +46,9 @@
           />
         </el-form-item>
         
-        <el-form-item label="姓名" prop="name">
+        <el-form-item label="姓名" prop="realName">
           <el-input
-            v-model="registerForm.name"
+            v-model="registerForm.realName"
             placeholder="请输入真实姓名"
             prefix-icon="el-icon-user-filled"
             clearable
@@ -70,30 +70,6 @@
             type="email"
             placeholder="请输入邮箱地址"
             prefix-icon="el-icon-message"
-            clearable
-          />
-        </el-form-item>
-        
-        <el-form-item label="所属部门" prop="department">
-          <el-select
-            v-model="registerForm.department"
-            placeholder="请选择所属部门"
-            clearable
-          >
-            <el-option label="采购部" value="采购部" />
-            <el-option label="仓库管理部" value="仓库管理部" />
-            <el-option label="生产部" value="生产部" />
-            <el-option label="财务部" value="财务部" />
-            <el-option label="行政部" value="行政部" />
-            <el-option label="技术部" value="技术部" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="职位" prop="position">
-          <el-input
-            v-model="registerForm.position"
-            placeholder="请输入职位"
-            prefix-icon="el-icon-suitcase"
             clearable
           />
         </el-form-item>
@@ -126,11 +102,9 @@ const registerForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  name: '',
+  realName: '',
   phone: '',
   email: '',
-  department: '',
-  position: '',
   agreeTerms: false
 })
 
@@ -141,12 +115,11 @@ const validateUsernameUnique = async (rule, value, callback) => {
   }
   
   try {
-    // 模拟用户名唯一性校验
-    // 实际项目中应该调用API检查用户名是否已存在
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const response = await request.get('/user/list', {
+      params: { username: value }
+    })
     
-    const existingUsernames = ['admin', 'user', 'test']
-    if (existingUsernames.includes(value)) {
+    if (response.data && response.data.length > 0) {
       callback(new Error('该用户名已被使用'))
     } else {
       callback()
@@ -189,7 +162,7 @@ const registerRules = {
     { required: true, message: '请再次输入密码', trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
   ],
-  name: [
+  realName: [
     { required: true, message: '请输入真实姓名', trigger: 'blur' },
     { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
   ],
@@ -200,12 +173,6 @@ const registerRules = {
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-  ],
-  department: [
-    { required: true, message: '请选择所属部门', trigger: 'change' }
-  ],
-  position: [
-    { required: true, message: '请输入职位', trigger: 'blur' }
   ],
   agreeTerms: [
     { validator: validateAgreeTerms, trigger: 'change' }
@@ -225,22 +192,13 @@ const handleRegister = async () => {
       const registerData = {
         username: registerForm.username,
         password: registerForm.password,
-        name: registerForm.name,
+        realName: registerForm.realName,
         phone: registerForm.phone,
-        email: registerForm.email,
-        department: registerForm.department,
-        position: registerForm.position
+        email: registerForm.email
       }
       
       // 调用注册API
-      // 由于我们使用的是mock数据，这里模拟API调用
-      // 实际项目中应该使用request.post('/register', registerData)
-      
-      // 模拟注册请求延迟
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // 模拟注册成功，实际项目中应该调用真实API
-      console.log('注册成功:', registerData)
+      await request.post('/auth/register', registerData)
       
       // 显示注册成功消息
       ElMessage.success('注册成功，请登录')
@@ -253,7 +211,22 @@ const handleRegister = async () => {
     }
   } catch (error) {
     console.error('注册失败:', error)
-    ElMessage.error('注册失败，请稍后重试')
+    let errorMessage = '注册失败，请稍后重试'
+    
+    if (error.response) {
+      const responseData = error.response.data
+      if (responseData && responseData.message) {
+        errorMessage = responseData.message
+      } else if (error.response.status === 500) {
+        errorMessage = '服务器内部错误'
+      } else if (error.response.status === 400) {
+        errorMessage = '请求参数错误'
+      }
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    ElMessage.error(errorMessage)
   } finally {
     loading.value = false
   }

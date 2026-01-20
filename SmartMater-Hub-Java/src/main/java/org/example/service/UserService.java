@@ -16,5 +16,7 @@ public interface UserService {
 
     int update(User user);
 
+    int resetPassword(Integer id, String password, String oldPassword);
+
     int delete(Integer id);
 }

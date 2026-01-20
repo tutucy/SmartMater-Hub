@@ -12,47 +12,43 @@ import * as tf from '@tensorflow/tfjs';
  * @returns {tf.Sequential} LSTM模型
  */
 export function createLSTMModel(windowSize, numFeatures = 1) {
-  // 创建序列模型
   const model = tf.sequential();
   
-  // 添加第一个LSTM层
+  const lstmUnits = windowSize > 30 ? 32 : 64;
+  
   model.add(tf.layers.lstm({
-    units: 64,
+    units: lstmUnits,
     returnSequences: true,
     inputShape: [windowSize, numFeatures],
     kernelInitializer: 'glorotUniform',
-    recurrentInitializer: 'orthogonal',
+    recurrentInitializer: 'glorotUniform',
     biasInitializer: 'zeros',
     dropout: 0.2,
     recurrentDropout: 0.2
   }));
   
-  // 添加第二个LSTM层
   model.add(tf.layers.lstm({
-    units: 32,
+    units: Math.floor(lstmUnits / 2),
     returnSequences: false,
     kernelInitializer: 'glorotUniform',
-    recurrentInitializer: 'orthogonal',
+    recurrentInitializer: 'glorotUniform',
     biasInitializer: 'zeros',
     dropout: 0.2,
     recurrentDropout: 0.2
   }));
   
-  // 添加全连接层
   model.add(tf.layers.dense({
     units: 16,
     activation: 'relu',
     kernelInitializer: 'glorotUniform'
   }));
   
-  // 添加输出层
   model.add(tf.layers.dense({
     units: 1,
     activation: 'linear',
     kernelInitializer: 'glorotUniform'
   }));
   
-  // 编译模型
   model.compile({
     optimizer: tf.train.adam(0.001),
     loss: 'meanSquaredError',
@@ -87,20 +83,7 @@ export async function trainLSTMModel(model, X, y, options = {}) {
     epochs,
     batchSize,
     validationSplit,
-    verbose,
-    callbacks: [
-      tf.callbacks.earlyStopping({
-        monitor: 'val_loss',
-        patience: 10,
-        restoreBestWeights: false
-      }),
-      tf.callbacks.reducelronplateau({
-        monitor: 'val_loss',
-        factor: 0.5,
-        patience: 5,
-        minDelta: 0.0001
-      })
-    ]
+    verbose
   });
   
   // 释放张量内存
