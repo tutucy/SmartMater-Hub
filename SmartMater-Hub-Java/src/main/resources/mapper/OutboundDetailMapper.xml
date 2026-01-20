@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.OutboundDetailMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.OutboundDetail">
+        <id column="id" property="id"/>
+        <result column="outbound_id" property="outboundId"/>
+        <result column="material_id" property="materialId"/>
+        <result column="material_name" property="materialName"/>
+        <result column="specification" property="specification"/>
+        <result column="unit" property="unit"/>
+        <result column="quantity" property="quantity"/>
+        <result column="price" property="price"/>
+        <result column="amount" property="amount"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM outbound_detail WHERE id = #{id}
+    </select>
+
+    <select id="selectByOutboundId" resultMap="BaseResultMap">
+        SELECT * FROM outbound_detail WHERE outbound_id = #{outboundId}
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.OutboundDetail" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO outbound_detail (outbound_id, material_id, material_name, specification, unit, quantity, price, amount, remark)
+        VALUES (#{outboundId}, #{materialId}, #{materialName}, #{specification}, #{unit}, #{quantity}, #{price}, #{amount}, #{remark})
+    </insert>
+
+    <delete id="deleteByOutboundId">
+        DELETE FROM outbound_detail WHERE outbound_id = #{outboundId}
+    </delete>
+
+</mapper>

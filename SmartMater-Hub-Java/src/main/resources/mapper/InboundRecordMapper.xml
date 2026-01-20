@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.InboundRecordMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.InboundRecord">
+        <id column="id" property="id"/>
+        <result column="inbound_no" property="inboundNo"/>
+        <result column="inbound_type" property="inboundType"/>
+        <result column="supplier_id" property="supplierId"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="operator" property="operator"/>
+        <result column="remark" property="remark"/>
+        <result column="status" property="status"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM inbound_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByInboundNo" resultMap="BaseResultMap">
+        SELECT * FROM inbound_record WHERE inbound_no = #{inboundNo}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM inbound_record
+        <where>
+            <if test="inboundNo != null and inboundNo != ''">
+                AND inbound_no LIKE CONCAT('%', #{inboundNo}, '%')
+            </if>
+            <if test="inboundType != null and inboundType != ''">
+                AND inbound_type = #{inboundType}
+            </if>
+            <if test="supplierId != null">
+                AND supplier_id = #{supplierId}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND DATE(create_time) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND DATE(create_time) &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.InboundRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO inbound_record (inbound_no, inbound_type, supplier_id, order_no, total_quantity, total_amount, operator, remark, status, creator_id)
+        VALUES (#{inboundNo}, #{inboundType}, #{supplierId}, #{orderNo}, #{totalQuantity}, #{totalAmount}, #{operator}, #{remark}, #{status}, #{creatorId})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.InboundRecord">
+        UPDATE inbound_record
+        <set>
+            <if test="supplierId != null">
+                supplier_id = #{supplierId},
+            </if>
+            <if test="totalQuantity != null">
+                total_quantity = #{totalQuantity},
+            </if>
+            <if test="totalAmount != null">
+                total_amount = #{totalAmount},
+            </if>
+            <if test="operator != null">
+                operator = #{operator},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM inbound_record WHERE id = #{id}
+    </delete>
+
+</mapper>

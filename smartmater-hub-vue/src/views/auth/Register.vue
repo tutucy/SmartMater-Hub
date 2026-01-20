@@ -134,44 +134,6 @@ const registerForm = reactive({
   agreeTerms: false
 })
 
-// 注册表单验证规则
-const registerRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
-    { validator: validateUsernameUnique, trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
-    { validator: validateConfirmPassword, trigger: 'blur' }
-  ],
-  name: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' },
-    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
-  ],
-  phone: [
-    { required: true, message: '请输入手机号码', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-  ],
-  department: [
-    { required: true, message: '请选择所属部门', trigger: 'change' }
-  ],
-  position: [
-    { required: true, message: '请输入职位', trigger: 'blur' }
-  ],
-  agreeTerms: [
-    { validator: validateAgreeTerms, trigger: 'change' }
-  ]
-}
-
 // 验证用户名唯一性
 const validateUsernameUnique = async (rule, value, callback) => {
   if (!value) {
@@ -210,6 +172,44 @@ const validateAgreeTerms = (rule, value, callback) => {
   } else {
     callback()
   }
+}
+
+// 注册表单验证规则
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' },
+    { validator: validateUsernameUnique, trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' },
+    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号码', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  department: [
+    { required: true, message: '请选择所属部门', trigger: 'change' }
+  ],
+  position: [
+    { required: true, message: '请输入职位', trigger: 'blur' }
+  ],
+  agreeTerms: [
+    { validator: validateAgreeTerms, trigger: 'change' }
+  ]
 }
 
 // 处理注册

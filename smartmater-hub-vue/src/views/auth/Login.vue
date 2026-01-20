@@ -90,27 +90,10 @@ const handleLogin = async () => {
       loading.value = true
       
       // 调用登录API
-      // 由于我们使用的是mock数据，这里模拟API调用
-      // 实际项目中应该使用request.post('/login', loginForm)
-      
-      // 模拟登录请求延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // 模拟登录成功，实际项目中应该调用真实API
-      const mockToken = 'mock-jwt-token-' + Date.now()
-      const mockUserInfo = {
-        id: 1,
-        username: loginForm.username,
-        name: '管理员',
-        role: 'admin',
-        email: 'admin@example.com',
-        phone: '13800138000',
-        department: '技术部',
-        position: '系统管理员'
-      }
+      const response = await request.post('/auth/login', loginForm)
       
       // 保存登录状态到Pinia
-      userStore.loginSuccess(mockUserInfo, mockToken)
+      userStore.loginSuccess(response.data.userInfo, response.data.token)
       
       // 显示登录成功消息
       ElMessage.success('登录成功')

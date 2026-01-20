@@ -145,10 +145,46 @@
                 :value="material.id"
               />
             </el-select>
+            
+            <!-- ARIMA-LSTM算法控制按钮 -->
+            <div class="algorithm-controls">
+              <el-button 
+                type="primary" 
+                @click="trainModel"
+                :loading="algorithmLoading"
+                :disabled="modelTrained"
+                style="width: 100%; margin-bottom: 10px;"
+                icon="StarFilled"
+              >
+                {{ modelTrained ? '模型已训练' : '训练ARIMA-LSTM模型' }}
+              </el-button>
+              
+              <el-button 
+                type="success" 
+                @click="predictStock"
+                :loading="algorithmLoading"
+                :disabled="!modelTrained"
+                style="width: 100%;"
+                icon="TrendCharts"
+              >
+                预测未来15天库存趋势
+              </el-button>
+            </div>
           </div>
           
           <div class="chart-container">
             <div ref="chartRef" class="chart"></div>
+          </div>
+          
+          <!-- 算法状态提示 -->
+          <div v-if="modelTrained" class="algorithm-status">
+            <el-alert
+              title="模型状态"
+              type="success"
+              description="ARIMA-LSTM混合模型已训练完成，可以进行库存预测。"
+              :closable="false"
+              style="margin-top: 20px;"
+            />
           </div>
         </el-card>
       </el-col>
@@ -222,6 +258,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 引入 ECharts
 import * as echarts from 'echarts'
+
+// 引入ARIMA-LSTM混合算法
+import { trainHybridModel, predictHybridModel, generateMockData } from '../../algorithms/arima-lstm'
 
 const warningMaterials = ref([])
 const materials = ref([])
@@ -679,6 +718,165 @@ onMounted(() => {
 
 // 选择的记录
 const selectedMaterials = ref([])
+
+// 算法相关状态
+const algorithmLoading = ref(false)
+const modelTrained = ref(false)
+let hybridModel = null
+let trainingData = []
+
+// 训练ARIMA-LSTM混合模型
+const trainModel = async () => {
+  algorithmLoading.value = true
+  try {
+    // 生成模拟库存数据（实际应用中应使用真实历史数据）
+    trainingData = generateMockData(100, { trend: 0.5, seasonality: 20, noise: 0.2 })
+    
+    // 训练混合模型
+    hybridModel = await trainHybridModel(trainingData, {
+      windowSize: 7,
+      lstmEpochs: 30,
+      lstmBatchSize: 16
+    })
+    
+    modelTrained.value = true
+    ElMessage.success('ARIMA-LSTM混合模型训练完成！')
+    
+    // 训练完成后更新图表
+    if (chartInstance) {
+      updateChartWithPredictions()
+    }
+  } catch (error) {
+    console.error('模型训练失败:', error)
+    ElMessage.error('模型训练失败，请检查控制台日志')
+  } finally {
+    algorithmLoading.value = false
+  }
+}
+
+// 使用混合模型进行预测
+const predictStock = async (steps = 15) => {
+  if (!modelTrained.value || !hybridModel) {
+    ElMessage.warning('请先训练模型')
+    return
+  }
+  
+  algorithmLoading.value = true
+  try {
+    // 使用训练好的模型进行预测
+    const predictionResult = await predictHybridModel(hybridModel, trainingData, steps)
+    
+    // 更新图表显示预测结果
+    if (chartInstance) {
+      updateChartWithPredictions(predictionResult)
+    }
+    
+    ElMessage.success(`成功预测未来${steps}天的库存趋势！`)
+  } catch (error) {
+    console.error('预测失败:', error)
+    ElMessage.error('预测失败，请检查控制台日志')
+  } finally {
+    algorithmLoading.value = false
+  }
+}
+
+// 更新图表以显示预测结果
+const updateChartWithPredictions = (predictionResult = null) => {
+  if (!chartInstance) return
+  
+  // 准备历史数据
+  const dates = Array.from({ length: 30 }, (_, i) => `${i + 1}日`)
+  const historyData = trainingData.slice(-30)
+  
+  let chartOption = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b}: {c} {a}'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: dates
+    },
+    yAxis: {
+      type: 'value',
+      name: '库存数量'
+    },
+    series: [
+      {
+        name: '历史库存',
+        type: 'line',
+        data: historyData,
+        smooth: true,
+        itemStyle: {
+          color: '#409eff'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+            }, {
+              offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+            }]
+          }
+        }
+      }
+    ]
+  }
+  
+  // 如果有预测结果，添加预测数据到图表
+  if (predictionResult) {
+    const { predictions } = predictionResult
+    const futureDates = Array.from({ length: predictions.hybrid.length }, (_, i) => `预测${i + 1}日`)
+    
+    // 合并日期和数据
+    chartOption.xAxis.data = [...dates, ...futureDates]
+    
+    // 添加预测结果系列
+    chartOption.series.push(
+      {
+        name: 'ARIMA-LSTM预测',
+        type: 'line',
+        data: [...Array(30).fill(null), ...predictions.hybrid],
+        smooth: true,
+        itemStyle: {
+          color: '#f56c6c'
+        },
+        lineStyle: {
+          type: 'dashed'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(245, 108, 108, 0.3)'
+            }, {
+              offset: 1, color: 'rgba(245, 108, 108, 0.1)'
+            }]
+          }
+        }
+      }
+    )
+  }
+  
+  // 更新图表
+  chartInstance.setOption(chartOption)
+}
 </script>
 
 <style scoped>
@@ -797,5 +995,20 @@ const selectedMaterials = ref([])
 .stock-out {
   color: #f56c6c;
   font-weight: bold;
+}
+
+/* 算法控制按钮样式 */
+.algorithm-controls {
+  margin-bottom: 20px;
+}
+
+/* 算法状态提示样式 */
+.algorithm-status {
+  margin-top: 20px;
+}
+
+/* 调整图表高度以适应新增内容 */
+.chart-container {
+  height: 250px;
 }
 </style>

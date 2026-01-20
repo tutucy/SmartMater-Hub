@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.InventoryRecordMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.InventoryRecord">
+        <id column="id" property="id"/>
+        <result column="record_no" property="recordNo"/>
+        <result column="material_id" property="materialId"/>
+        <result column="record_type" property="recordType"/>
+        <result column="quantity" property="quantity"/>
+        <result column="price" property="price"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM inventory_record WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM inventory_record
+        <where>
+            <if test="recordNo != null and recordNo != ''">
+                AND record_no = #{recordNo}
+            </if>
+            <if test="materialId != null">
+                AND material_id = #{materialId}
+            </if>
+            <if test="recordType != null">
+                AND record_type = #{recordType}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.InventoryRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO inventory_record (record_no, material_id, record_type, quantity, price, operator_id, remark)
+        VALUES (#{recordNo}, #{materialId}, #{recordType}, #{quantity}, #{price}, #{operatorId}, #{remark})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM inventory_record WHERE id = #{id}
+    </delete>
+
+</mapper>

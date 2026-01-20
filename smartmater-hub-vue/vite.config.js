@@ -21,8 +21,13 @@ export default defineConfig({
   ],
   // 配置server选项，确保mock请求被正确处理
   server: {
+    port: 5173,
     proxy: {
-      // 不需要额外的代理配置，vite-plugin-mock会直接处理
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
     }
   }
 })

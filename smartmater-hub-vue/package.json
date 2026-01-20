@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-layers": "^4.22.0",
     "axios": "^1.13.2",
     "echarts": "^6.0.0",
     "element-plus": "^2.13.0",

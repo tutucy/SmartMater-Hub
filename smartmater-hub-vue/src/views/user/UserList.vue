@@ -299,74 +299,18 @@ const userRules = {
 const fetchUsers = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟用户列表数据
-    const mockUsers = [
-      {
-        id: 1,
-        username: 'admin',
-        name: '管理员',
-        email: 'admin@example.com',
-        phone: '13800138000',
-        department: '技术部',
-        position: '系统管理员',
-        role: 'admin',
-        status: '1',
-        lastLoginTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: 2,
-        username: 'purchaser1',
-        name: '采购员张三',
-        email: 'purchaser1@example.com',
-        phone: '13800138001',
-        department: '采购部',
-        position: '采购员',
-        role: 'purchaser',
-        status: '1',
-        lastLoginTime: '2024-01-02 14:30:00'
-      },
-      {
-        id: 3,
-        username: 'warehouse1',
-        name: '仓库管理员李四',
-        email: 'warehouse1@example.com',
-        phone: '13800138002',
-        department: '仓库管理部',
-        position: '仓库管理员',
-        role: 'warehouse_manager',
-        status: '1',
-        lastLoginTime: '2024-01-03 09:15:00'
-      },
-      {
-        id: 4,
-        username: 'employee1',
-        name: '员工王五',
-        email: 'employee1@example.com',
-        phone: '13800138003',
-        department: '生产部',
-        position: '生产工人',
-        role: 'employee',
-        status: '1',
-        lastLoginTime: '2024-01-04 16:45:00'
+    // 调用后端API
+    const response = await request.get('/user/list', {
+      params: {
+        username: searchKeyword.value || undefined,
+        realName: searchKeyword.value || undefined,
+        roleId: searchRole.value || undefined,
+        status: searchStatus.value || undefined
       }
-    ]
+    })
     
-    // 模拟搜索功能
-    let filteredUsers = mockUsers
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredUsers = mockUsers.filter(user => 
-        user.username.toLowerCase().includes(keyword) ||
-        user.name.toLowerCase().includes(keyword) ||
-        user.email.toLowerCase().includes(keyword)
-      )
-    }
-    
-    userList.value = filteredUsers
-    total.value = filteredUsers.length
+    userList.value = response.data || []
+    total.value = userList.value.length
   } catch (error) {
     console.error('获取用户列表失败:', error)
     ElMessage.error('获取用户列表失败')
@@ -499,13 +443,8 @@ const handleDeleteUser = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 调用删除用户API
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除用户:', row)
+  .then(async () => {
+    await request.delete(`/user/${row.id}`)
     ElMessage.success('用户删除成功')
     // 刷新用户列表
     fetchUsers()

@@ -307,6 +307,69 @@ a:hover {
   border-right: 1px solid var(--border-color);
 }
 
+/* 表格操作按钮样式 - 改为链接形式 */
+.el-table-column__cell .el-button {
+  /* 基础样式 */
+  background: transparent !important;
+  border: none !important;
+  color: var(--primary-color) !important;
+  box-shadow: none !important;
+  padding: 4px 8px !important;
+  font-size: var(--font-size-sm) !important;
+  border-radius: 0 !important;
+  text-decoration: underline !important;
+  /* 移除按钮效果 */
+  transform: none !important;
+  transition: var(--transition-color) !important;
+}
+
+/* 编辑按钮 */
+.el-table-column__cell .el-button--primary {
+  color: var(--primary-color) !important;
+}
+
+.el-table-column__cell .el-button--primary:hover {
+  color: var(--primary-light) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 重置密码按钮 */
+.el-table-column__cell .el-button--success {
+  color: var(--success-color) !important;
+}
+
+.el-table-column__cell .el-button--success:hover {
+  color: var(--success-light) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 删除按钮 */
+.el-table-column__cell .el-button--danger {
+  color: var(--danger-color) !important;
+}
+
+.el-table-column__cell .el-button--danger:hover {
+  color: var(--danger-light) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 按钮图标样式 */
+.el-table-column__cell .el-button .el-icon {
+  margin-right: 4px !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+/* 按钮间距 */
+.el-table-column__cell .el-button + .el-button {
+  margin-left: var(--spacing-xs) !important;
+}
+
 /* 卡片样式优化 - 现代化设计 */
 .el-card {
   box-shadow: var(--card-shadow);

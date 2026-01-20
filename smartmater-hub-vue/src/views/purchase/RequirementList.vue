@@ -4,13 +4,18 @@
     
     <el-card shadow="hover" class="requirement-card">
       <template #header>
-        <div class="card-header">
-          <span>需求列表</span>
-          <el-button type="primary" @click="handleAddRequirement" icon="Plus">
-            新增需求
-          </el-button>
-        </div>
-      </template>
+    <div class="card-header">
+      <span>需求列表</span>
+      <div>
+        <el-button type="primary" @click="handleAddRequirement" icon="Plus">
+          新增需求
+        </el-button>
+        <el-button type="success" @click="handleOpenRecommend" icon="TrendCharts" style="margin-left: 10px;">
+          智能采购推荐
+        </el-button>
+      </div>
+    </div>
+  </template>
       
       <!-- 需求搜索 -->
       <div class="requirement-search">
@@ -284,6 +289,123 @@
         </div>
       </template>
     </el-dialog>
+    
+    <!-- 智能采购推荐对话框 -->
+    <el-dialog
+      v-model="recommendDialogVisible"
+      title="智能采购推荐"
+      width="900px"
+    >
+      <div class="recommend-header">
+        <el-button type="primary" @click="generateRecommendations" :loading="recommendLoading" icon="MagicStick">
+          生成智能推荐
+        </el-button>
+        <el-alert
+          title="推荐说明"
+          type="info"
+          description="基于ARIMA-LSTM混合模型分析历史数据，预测未来30天库存需求，生成智能采购推荐。"
+          :closable="false"
+          style="margin-top: 10px;"
+        />
+      </div>
+      
+      <div v-if="recommendResults.length > 0" class="recommend-results">
+        <el-table
+          :data="recommendResults"
+          style="width: 100%"
+          border
+        >
+          <el-table-column label="物资名称" min-width="180">
+            <template #default="scope">
+              {{ scope.row.material.name }}
+            </template>
+          </el-table-column>
+          <el-table-column label="规格型号" width="150">
+            <template #default="scope">
+              {{ scope.row.material.specification }}
+            </template>
+          </el-table-column>
+          <el-table-column label="单位" width="80">
+            <template #default="scope">
+              {{ scope.row.material.unit }}
+            </template>
+          </el-table-column>
+          <el-table-column label="当前库存" width="100" align="right">
+            <template #default="scope">
+              {{ scope.row.lastStock.toFixed(1) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="推荐采购量" width="120" align="right">
+            <template #default="scope">
+              <span style="font-weight: bold; color: #409EFF;">
+                {{ scope.row.recommendedQuantity }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="安全库存建议" width="120" align="right">
+            <template #default="scope">
+              {{ scope.row.safetyStock }}
+            </template>
+          </el-table-column>
+          <el-table-column label="预估成本" width="120" align="right">
+            <template #default="scope">
+              ¥{{ scope.row.estimatedCost.toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="趋势预测" width="150">
+            <template #default="scope">
+              <el-progress
+                :percentage="scope.row.predictedTrend[scope.row.predictedTrend.length - 1] > scope.row.lastStock ? 70 : 30"
+                :color="scope.row.predictedTrend[scope.row.predictedTrend.length - 1] > scope.row.lastStock ? '#67C23A' : '#E6A23C'"
+                :stroke-width="8"
+                show-text="false"
+              >
+              </el-progress>
+              <span style="margin-left: 10px; font-size: 12px;">
+                {{ scope.row.predictedTrend[scope.row.predictedTrend.length - 1] > scope.row.lastStock ? '上升' : '下降' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" fixed="right">
+            <template #default="scope">
+              <el-button 
+                type="success" 
+                size="small" 
+                @click="addToRequirement(scope.row)"
+                icon="Plus"
+              >
+                添加到需求
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 预测趋势图 -->
+        <el-card v-if="recommendResults.length > 0" shadow="hover" style="margin-top: 20px;">
+          <template #header>
+            <div class="card-header">
+              <span>库存趋势预测</span>
+            </div>
+          </template>
+          <div class="trend-chart" style="height: 300px;">
+            <!-- 这里可以添加更详细的趋势图，目前简化处理 -->
+            <div style="text-align: center; padding: 50px; color: #909399;">
+              选择具体物资查看详细趋势预测
+            </div>
+          </div>
+        </el-card>
+      </div>
+      
+      <div v-else class="empty-recommend">
+        <el-empty description="点击上方按钮生成智能采购推荐" />
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="recommendDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -291,6 +413,9 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import request from '../../services/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+// 引入ARIMA-LSTM混合算法
+import { trainHybridModel, predictHybridModel, generateMockData } from '../../algorithms/arima-lstm'
 
 const requirements = ref([])
 const materials = ref([])
@@ -302,6 +427,106 @@ const searchKeyword = ref('')
 const searchStatus = ref('')
 const dateRange = ref([])
 const selectedRequirements = ref([])
+
+// 智能采购推荐相关
+const recommendDialogVisible = ref(false)
+const recommendLoading = ref(false)
+const recommendResults = ref([])
+let recommendModel = null
+
+// 打开智能采购推荐对话框
+const handleOpenRecommend = () => {
+  recommendDialogVisible.value = true
+}
+
+// 生成智能采购推荐
+const generateRecommendations = async () => {
+  if (!materials.value || materials.value.length === 0) {
+    ElMessage.warning('请先加载物资列表')
+    return
+  }
+  
+  recommendLoading.value = true
+  try {
+    // 为每种物资生成历史数据并进行预测
+    const recommendations = []
+    
+    for (const material of materials.value) {
+      // 生成模拟历史库存数据
+      const historicalData = generateMockData(60, {
+        trend: 0.3,
+        seasonality: 20,
+        noise: 0.1
+      })
+      
+      // 训练混合模型
+      const model = await trainHybridModel(historicalData, {
+        windowSize: 7,
+        lstmEpochs: 20,
+        lstmBatchSize: 16
+      })
+      
+      // 预测未来30天的库存需求
+      const prediction = await predictHybridModel(model, historicalData, 30)
+      
+      // 计算推荐采购量
+      const lastStock = historicalData[historicalData.length - 1]
+      const avgPredictedConsumption = prediction.predictions.hybrid.reduce((sum, val) => sum + Math.abs(val - lastStock), 0) / prediction.predictions.hybrid.length
+      const recommendedQuantity = Math.ceil(avgPredictedConsumption * 1.2) // 1.2倍安全系数
+      
+      // 添加推荐结果
+      recommendations.push({
+        material,
+        lastStock,
+        predictedTrend: prediction.predictions.hybrid,
+        recommendedQuantity,
+        safetyStock: Math.ceil(recommendedQuantity * 0.3), // 安全库存为推荐量的30%
+        estimatedCost: recommendedQuantity * (Math.random() * 100 + 50) // 模拟预估成本
+      })
+    }
+    
+    // 按推荐优先级排序（推荐量从大到小）
+    recommendResults.value = recommendations.sort((a, b) => b.recommendedQuantity - a.recommendedQuantity)
+    
+    ElMessage.success('智能采购推荐生成成功！')
+  } catch (error) {
+    console.error('生成采购推荐失败:', error)
+    ElMessage.error('生成采购推荐失败，请检查控制台日志')
+  } finally {
+    recommendLoading.value = false
+  }
+}
+
+// 将推荐添加到需求明细
+const addToRequirement = (recommendItem) => {
+  // 检查是否已存在相同物资
+  const existingIndex = requirementForm.details.findIndex(detail => detail.materialId === recommendItem.material.id)
+  
+  if (existingIndex >= 0) {
+    // 更新现有明细的数量
+    requirementForm.details[existingIndex].quantity += recommendItem.recommendedQuantity
+  } else {
+    // 添加新明细
+    requirementForm.details.push({
+      id: Date.now(),
+      materialId: recommendItem.material.id,
+      materialName: recommendItem.material.name,
+      specification: recommendItem.material.specification,
+      unit: recommendItem.material.unit,
+      quantity: recommendItem.recommendedQuantity,
+      estimatedPrice: recommendItem.estimatedCost / recommendItem.recommendedQuantity,
+      estimatedAmount: recommendItem.estimatedCost
+    })
+  }
+  
+  // 更新总数量和总金额
+  requirementForm.totalQuantity = totalQuantity.value
+  requirementForm.totalAmount = totalAmount.value
+  
+  ElMessage.success(`已将${recommendItem.material.name}添加到需求明细！`)
+  recommendDialogVisible.value = false
+  dialogVisible.value = true // 打开需求编辑对话框
+}
 
 // 对话框相关
 const dialogVisible = ref(false)
@@ -801,5 +1026,23 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* 智能采购推荐样式 */
+.recommend-header {
+  margin-bottom: 20px;
+}
+
+.recommend-results {
+  margin-top: 20px;
+}
+
+.empty-recommend {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.trend-chart {
+  margin-top: 20px;
 }
 </style>

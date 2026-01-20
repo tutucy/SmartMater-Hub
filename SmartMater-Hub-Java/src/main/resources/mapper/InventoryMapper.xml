@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.InventoryMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.Inventory">
+        <id column="id" property="id"/>
+        <result column="material_id" property="materialId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="min_quantity" property="minQuantity"/>
+        <result column="max_quantity" property="maxQuantity"/>
+        <result column="warehouse" property="warehouse"/>
+        <result column="location" property="location"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM inventory WHERE id = #{id}
+    </select>
+
+    <select id="selectByMaterialId" resultMap="BaseResultMap">
+        SELECT * FROM inventory WHERE material_id = #{materialId}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM inventory
+        <where>
+            <if test="materialId != null">
+                AND material_id = #{materialId}
+            </if>
+            <if test="warehouse != null and warehouse != ''">
+                AND warehouse = #{warehouse}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectWarningList" resultMap="BaseResultMap">
+        SELECT * FROM inventory
+        WHERE quantity &lt;= min_quantity
+        ORDER BY quantity ASC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.Inventory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO inventory (material_id, quantity, min_quantity, max_quantity, warehouse, location)
+        VALUES (#{materialId}, #{quantity}, #{minQuantity}, #{maxQuantity}, #{warehouse}, #{location})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.Inventory">
+        UPDATE inventory
+        <set>
+            <if test="quantity != null">
+                quantity = #{quantity},
+            </if>
+            <if test="minQuantity != null">
+                min_quantity = #{minQuantity},
+            </if>
+            <if test="maxQuantity != null">
+                max_quantity = #{maxQuantity},
+            </if>
+            <if test="warehouse != null">
+                warehouse = #{warehouse},
+            </if>
+            <if test="location != null">
+                location = #{location},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateQuantity">
+        UPDATE inventory SET quantity = quantity + #{quantity} WHERE material_id = #{materialId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM inventory WHERE id = #{id}
+    </delete>
+
+</mapper>

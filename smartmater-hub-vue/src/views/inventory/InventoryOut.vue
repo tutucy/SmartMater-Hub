@@ -199,7 +199,7 @@
                 v-model="outboundForm.operator"
                 placeholder="请输入操作人姓名"
                 clearable
-              />
+              /> 
             </el-form-item>
             
             <el-form-item label="用途" prop="purpose">
@@ -406,110 +406,26 @@ const totalAmount = computed(() => {
 const fetchOutboundRecords = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟出库记录数据
-    const mockRecords = [
-      {
-        id: 1,
-        outboundNo: 'CK20240101001',
-        outboundType: 'issue',
-        operator: 'admin',
-        recipient: '张三',
-        department: '行政部',
-        totalQuantity: 10,
-        totalAmount: 255,
-        purpose: '日常办公使用',
-        remark: '',
-        outboundDate: '2024-01-01 14:00:00',
-        status: '1'
-      },
-      {
-        id: 2,
-        outboundNo: 'CK20240102002',
-        outboundType: 'issue',
-        operator: 'admin',
-        recipient: '李四',
-        department: '技术部',
-        totalQuantity: 5,
-        totalAmount: 445,
-        purpose: '项目开发需要',
-        remark: '',
-        outboundDate: '2024-01-02 09:30:00',
-        status: '1'
-      },
-      {
-        id: 3,
-        outboundNo: 'CK20240103003',
-        outboundType: 'sale',
-        operator: 'admin',
-        recipient: '外部客户',
-        department: '销售部',
-        customerInfo: '客户A',
-        totalQuantity: 20,
-        totalAmount: 510,
-        purpose: '销售出库',
-        remark: '',
-        outboundDate: '2024-01-03 16:00:00',
-        status: '1'
-      },
-      {
-        id: 4,
-        outboundNo: 'CK20240104004',
-        outboundType: 'issue',
-        operator: 'admin',
-        recipient: '王五',
-        department: '生产部',
-        totalQuantity: 30,
-        totalAmount: 75,
-        purpose: '生产使用',
-        remark: '',
-        outboundDate: '2024-01-04 11:00:00',
-        status: '0'
+    // 调用后端API
+    const response = await request.get('/outbound/list', {
+      params: {
+        outboundNo: searchKeyword.value || undefined,
+        outboundType: searchOutboundType.value || undefined,
+        startDate: dateRange.value && dateRange.value[0] || undefined,
+        endDate: dateRange.value && dateRange.value[1] || undefined
       }
-    ]
+    })
     
-    // 模拟搜索功能
-    let filteredRecords = mockRecords
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredRecords = mockRecords.filter(record => 
-        record.outboundNo.toLowerCase().includes(keyword) ||
-        record.recipient.toLowerCase().includes(keyword) ||
-        record.department.toLowerCase().includes(keyword)
-      )
-    }
+    outboundRecords.value = response.data || []
+    total.value = outboundRecords.value.length
     
-    if (searchOutboundType.value) {
-      filteredRecords = filteredRecords.filter(record => 
-        record.outboundType === searchOutboundType.value
-      )
-    }
-    
-    // 模拟日期范围过滤
-    if (dateRange.value && dateRange.value.length === 2) {
-      filteredRecords = filteredRecords.filter(record => {
-        const recordDate = new Date(record.outboundDate)
-        const startDate = new Date(dateRange.value[0])
-        const endDate = new Date(dateRange.value[1])
-        return recordDate >= startDate && recordDate <= endDate
-      })
-    }
-    
-    outboundRecords.value = filteredRecords
-    total.value = filteredRecords.length
-    
-    // 模拟物资数据
-    materials.value = [
-      { id: 1, name: 'A4打印纸', specification: '80g 500张/包', unit: '包', stockQuantity: 150, price: 25.5 },
-      { id: 2, name: '黑色中性笔', specification: '0.5mm', unit: '支', stockQuantity: 300, price: 2.5 },
-      { id: 3, name: '鼠标', specification: '有线 USB', unit: '个', stockQuantity: 20, price: 89.0 },
-      { id: 4, name: '键盘', specification: '机械键盘 青轴', unit: '个', stockQuantity: 8, price: 299.0 },
-      { id: 5, name: '文件夹', specification: 'A4 塑料材质', unit: '个', stockQuantity: 450, price: 5.0 },
-      { id: 6, name: '订书机', specification: '标准型', unit: '个', stockQuantity: 0, price: 18.5 },
-      { id: 7, name: '硒鼓', specification: 'HP LaserJet Pro M404n', unit: '个', stockQuantity: 5, price: 499.0 }
-    ]
+    // 获取物资列表
+    const materialResponse = await request.get('/material/list', {
+      params: {
+        status: 1
+      }
+    })
+    materials.value = materialResponse.data || []
   } catch (error) {
     console.error('获取出库记录失败:', error)
     ElMessage.error('获取出库记录失败')
@@ -628,12 +544,8 @@ const handleDeleteOutbound = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除出库:', row)
+  .then(async () => {
+    await request.delete(`/outbound/${row.id}`)
     ElMessage.success('出库记录删除成功')
     // 刷新出库记录
     fetchOutboundRecords()
@@ -725,16 +637,24 @@ const handleSaveOutbound = async () => {
         return
       }
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 计算总数量和总金额
+      const totalQuantity = outboundForm.details.reduce((sum, item) => sum + item.quantity, 0)
+      const totalAmount = outboundForm.details.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+      
+      // 准备提交数据
+      const submitData = {
+        ...outboundForm,
+        totalQuantity: totalQuantity,
+        totalAmount: totalAmount
+      }
       
       if (outboundForm.id) {
         // 编辑出库记录
-        console.log('编辑出库记录:', outboundForm)
+        await request.put('/outbound/update', submitData)
         ElMessage.success('出库记录编辑成功')
       } else {
         // 新增出库记录
-        console.log('新增出库记录:', outboundForm)
+        await request.post('/outbound/add', submitData)
         ElMessage.success('出库记录新增成功')
       }
       

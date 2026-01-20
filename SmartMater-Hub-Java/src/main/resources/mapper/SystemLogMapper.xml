@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SystemLogMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.SystemLog">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="operation" property="operation"/>
+        <result column="method" property="method"/>
+        <result column="params" property="params"/>
+        <result column="ip" property="ip"/>
+        <result column="status" property="status"/>
+        <result column="error_msg" property="errorMsg"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM system_log WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM system_log
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="operation != null and operation != ''">
+                AND operation LIKE CONCAT('%', #{operation}, '%')
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND DATE(create_time) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND DATE(create_time) &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.SystemLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO system_log (username, operation, method, params, ip, status, error_msg)
+        VALUES (#{username}, #{operation}, #{method}, #{params}, #{ip}, #{status}, #{errorMsg})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM system_log WHERE id = #{id}
+    </delete>
+
+</mapper>

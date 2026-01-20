@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.PurchaseOrderMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.PurchaseOrder">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="supplier_id" property="supplierId"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM purchase_order WHERE id = #{id}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT * FROM purchase_order WHERE order_no = #{orderNo}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM purchase_order
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="supplierId != null">
+                AND supplier_id = #{supplierId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.PurchaseOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO purchase_order (order_no, supplier_id, total_amount, status, remark, creator_id)
+        VALUES (#{orderNo}, #{supplierId}, #{totalAmount}, #{status}, #{remark}, #{creatorId})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.PurchaseOrder">
+        UPDATE purchase_order
+        <set>
+            <if test="supplierId != null">
+                supplier_id = #{supplierId},
+            </if>
+            <if test="totalAmount != null">
+                total_amount = #{totalAmount},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM purchase_order WHERE id = #{id}
+    </delete>
+
+</mapper>

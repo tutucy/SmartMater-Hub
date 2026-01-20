@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.SupplierMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.Supplier">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="contact" property="contact"/>
+        <result column="phone" property="phone"/>
+        <result column="address" property="address"/>
+        <result column="email" property="email"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM supplier WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM supplier
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="contact != null and contact != ''">
+                AND contact LIKE CONCAT('%', #{contact}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.Supplier" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO supplier (name, contact, phone, address, email, status, remark)
+        VALUES (#{name}, #{contact}, #{phone}, #{address}, #{email}, #{status}, #{remark})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.Supplier">
+        UPDATE supplier
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="contact != null">
+                contact = #{contact},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM supplier WHERE id = #{id}
+    </delete>
+
+</mapper>

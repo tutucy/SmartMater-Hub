@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.CategoryMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.Category">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="level" property="level"/>
+        <result column="path" property="path"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM category WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM category
+        <where>
+            <if test="parentId != null">
+                AND parent_id = #{parentId}
+            </if>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY sort ASC, create_time DESC
+    </select>
+
+    <select id="selectTree" resultMap="BaseResultMap">
+        SELECT * FROM category WHERE status = 1 ORDER BY sort ASC, create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.Category" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO category (name, parent_id, level, path, sort, status)
+        VALUES (#{name}, #{parentId}, #{level}, #{path}, #{sort}, #{status})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.Category">
+        UPDATE category
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId},
+            </if>
+            <if test="level != null">
+                level = #{level},
+            </if>
+            <if test="path != null">
+                path = #{path},
+            </if>
+            <if test="sort != null">
+                sort = #{sort},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM category WHERE id = #{id}
+    </delete>
+
+</mapper>

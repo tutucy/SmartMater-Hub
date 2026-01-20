@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.MaterialMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.Material">
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="specification" property="specification"/>
+        <result column="unit" property="unit"/>
+        <result column="price" property="price"/>
+        <result column="supplier" property="supplier"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="stock_quantity" property="stockQuantity"/>
+        <result column="stock_warning_value" property="stockWarningValue"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM material WHERE id = #{id}
+    </select>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT * FROM material WHERE code = #{code}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT m.*, i.quantity as stock_quantity, i.min_quantity as stock_warning_value
+        FROM material m
+        LEFT JOIN inventory i ON m.id = i.material_id
+        <where>
+            <if test="code != null and code != ''">
+                AND m.code LIKE CONCAT('%', #{code}, '%')
+            </if>
+            <if test="name != null and name != ''">
+                AND m.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND m.category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND m.status = #{status}
+            </if>
+        </where>
+        ORDER BY m.create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.Material" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO material (code, name, category_id, specification, unit, price, supplier, status, remark)
+        VALUES (#{code}, #{name}, #{categoryId}, #{specification}, #{unit}, #{price}, #{supplier}, #{status}, #{remark})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.Material">
+        UPDATE material
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="specification != null">
+                specification = #{specification},
+            </if>
+            <if test="unit != null">
+                unit = #{unit},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="supplier != null">
+                supplier = #{supplier},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM material WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -416,172 +416,18 @@ const materialRules = {
 const fetchMaterials = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟物资列表数据
-    const mockMaterials = [
-      {
-        id: 1,
-        name: 'A4打印纸',
-        specification: '80g 500张/包',
-        brand: '得力',
-        unit: '包',
-        categoryId: 2,
-        categoryName: '文具',
-        supplierId: 1,
-        supplierName: '得力办公',
-        stockQuantity: 150,
-        stockWarningValue: 50,
-        price: 25.5,
-        description: '高品质A4打印纸，适合日常办公使用',
-        status: '1',
-        createTime: '2024-01-01 10:00:00',
-        imageList: []
-      },
-      {
-        id: 2,
-        name: '黑色中性笔',
-        specification: '0.5mm',
-        brand: '晨光',
-        unit: '支',
-        categoryId: 2,
-        categoryName: '文具',
-        supplierId: 2,
-        supplierName: '晨光文具',
-        stockQuantity: 300,
-        stockWarningValue: 100,
-        price: 2.5,
-        description: '经典黑色中性笔，书写流畅',
-        status: '1',
-        createTime: '2024-01-02 14:30:00',
-        imageList: []
-      },
-      {
-        id: 3,
-        name: '鼠标',
-        specification: '有线 USB',
-        brand: '罗技',
-        unit: '个',
-        categoryId: 5,
-        categoryName: '电子设备',
-        supplierId: 3,
-        supplierName: '科技数码',
-        stockQuantity: 20,
-        stockWarningValue: 10,
-        price: 89.0,
-        description: '人体工学设计，舒适耐用',
-        status: '1',
-        createTime: '2024-01-03 09:15:00',
-        imageList: []
-      },
-      {
-        id: 4,
-        name: '键盘',
-        specification: '机械键盘 青轴',
-        brand: '雷蛇',
-        unit: '个',
-        categoryId: 5,
-        categoryName: '电子设备',
-        supplierId: 3,
-        supplierName: '科技数码',
-        stockQuantity: 8,
-        stockWarningValue: 5,
-        price: 299.0,
-        description: '机械键盘，打字手感好',
-        status: '1',
-        createTime: '2024-01-04 16:45:00',
-        imageList: []
-      },
-      {
-        id: 5,
-        name: '文件夹',
-        specification: 'A4 塑料材质',
-        brand: '齐心',
-        unit: '个',
-        categoryId: 2,
-        categoryName: '文具',
-        supplierId: 4,
-        supplierName: '齐心办公',
-        stockQuantity: 450,
-        stockWarningValue: 200,
-        price: 5.0,
-        description: '耐用塑料文件夹，方便整理文档',
-        status: '1',
-        createTime: '2024-01-05 11:30:00',
-        imageList: []
-      },
-      {
-        id: 6,
-        name: '订书机',
-        specification: '标准型',
-        brand: '得力',
-        unit: '个',
-        categoryId: 2,
-        categoryName: '文具',
-        supplierId: 1,
-        supplierName: '得力办公',
-        stockQuantity: 35,
-        stockWarningValue: 20,
-        price: 18.5,
-        description: '得力经典订书机，适合办公使用',
-        status: '1',
-        createTime: '2024-01-06 15:20:00',
-        imageList: []
-      },
-      {
-        id: 7,
-        name: '硒鼓',
-        specification: 'HP LaserJet Pro M404n',
-        brand: '惠普',
-        unit: '个',
-        categoryId: 3,
-        categoryName: '耗材',
-        supplierId: 5,
-        supplierName: '惠普耗材',
-        stockQuantity: 5,
-        stockWarningValue: 3,
-        price: 499.0,
-        description: '原装硒鼓，打印质量稳定',
-        status: '1',
-        createTime: '2024-01-07 10:45:00',
-        imageList: []
+    // 调用后端API
+    const response = await request.get('/material/list', {
+      params: {
+        code: searchKeyword.value || undefined,
+        name: searchKeyword.value || undefined,
+        categoryId: searchCategoryId.value || undefined
       }
-    ]
+    })
     
-    // 模拟分类数据
-    const mockCategories = [
-      { id: 2, name: '文具' },
-      { id: 3, name: '耗材' },
-      { id: 5, name: '电子设备' }
-    ]
+    let filteredMaterials = response.data || []
     
-    // 模拟供应商数据
-    const mockSuppliers = [
-      { id: 1, name: '得力办公' },
-      { id: 2, name: '晨光文具' },
-      { id: 3, name: '科技数码' },
-      { id: 4, name: '齐心办公' },
-      { id: 5, name: '惠普耗材' }
-    ]
-    
-    // 模拟搜索功能
-    let filteredMaterials = mockMaterials
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredMaterials = mockMaterials.filter(material => 
-        material.name.toLowerCase().includes(keyword) ||
-        material.specification.toLowerCase().includes(keyword) ||
-        material.brand.toLowerCase().includes(keyword)
-      )
-    }
-    
-    if (searchCategoryId.value) {
-      filteredMaterials = filteredMaterials.filter(material => 
-        material.categoryId === parseInt(searchCategoryId.value)
-      )
-    }
-    
+    // 根据库存状态过滤
     if (searchStockStatus.value) {
       filteredMaterials = filteredMaterials.filter(material => {
         if (searchStockStatus.value === 'normal') {
@@ -597,8 +443,22 @@ const fetchMaterials = async () => {
     
     materialList.value = filteredMaterials
     total.value = filteredMaterials.length
-    categories.value = mockCategories
-    suppliers.value = mockSuppliers
+    
+    // 获取分类列表
+    const categoryResponse = await request.get('/category/list', {
+      params: {
+        status: 1
+      }
+    })
+    categories.value = categoryResponse.data || []
+    
+    // 获取供应商列表
+    const supplierResponse = await request.get('/supplier/list', {
+      params: {
+        status: 1
+      }
+    })
+    suppliers.value = supplierResponse.data || []
   } catch (error) {
     console.error('获取物资列表失败:', error)
     ElMessage.error('获取物资列表失败')
@@ -676,16 +536,13 @@ const handleSaveMaterial = async () => {
     if (valid) {
       dialogLoading.value = true
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       if (materialForm.id) {
         // 编辑物资
-        console.log('编辑物资:', materialForm)
+        await request.put('/material/update', materialForm)
         ElMessage.success('物资编辑成功')
       } else {
         // 添加物资
-        console.log('添加物资:', materialForm)
+        await request.post('/material/add', materialForm)
         ElMessage.success('物资添加成功')
       }
       
@@ -722,13 +579,8 @@ const handleDeleteMaterial = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 调用删除物资API
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除物资:', row)
+  .then(async () => {
+    await request.delete(`/material/${row.id}`)
     ElMessage.success('物资删除成功')
     // 刷新物资列表
     fetchMaterials()

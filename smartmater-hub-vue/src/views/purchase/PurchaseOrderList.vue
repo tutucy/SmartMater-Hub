@@ -29,12 +29,10 @@
           style="width: 150px; margin-right: 10px;"
         >
           <el-option label="全部状态" value="" />
-          <el-option label="待审批" value="pending" />
-          <el-option label="已批准" value="approved" />
-          <el-option label="已拒绝" value="rejected" />
-          <el-option label="已发货" value="shipped" />
-          <el-option label="已完成" value="completed" />
-          <el-option label="已取消" value="canceled" />
+          <el-option label="待审核" value="0" />
+          <el-option label="已审核" value="1" />
+          <el-option label="已入库" value="2" />
+          <el-option label="已取消" value="3" />
         </el-select>
         <el-date-picker
           v-model="dateRange"
@@ -394,6 +392,7 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchKeyword = ref('')
+const searchSupplierId = ref('')
 const searchStatus = ref('')
 const dateRange = ref([])
 
@@ -463,125 +462,33 @@ const totalAmount = computed(() => {
 const fetchOrders = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟订单列表数据
-    const mockOrders = [
-      {
-        id: 1,
-        orderNo: 'PO20240101001',
-        supplierName: '得力办公',
-        totalAmount: 25500,
-        orderDate: '2024-01-01 10:00:00',
-        expectedDate: '2024-01-05',
-        actualDate: '2024-01-04',
-        status: 'completed',
-        operator: 'admin',
-        remark: '办公用品采购订单'
-      },
-      {
-        id: 2,
-        orderNo: 'PO20240102002',
-        supplierName: '科技数码',
-        totalAmount: 50000,
-        orderDate: '2024-01-02 14:30:00',
-        expectedDate: '2024-01-10',
-        actualDate: '',
-        status: 'shipped',
-        operator: 'admin',
-        remark: '技术部设备采购订单'
-      },
-      {
-        id: 3,
-        orderNo: 'PO20240103003',
-        supplierName: '晨光文具',
-        totalAmount: 7500,
-        orderDate: '2024-01-03 09:15:00',
-        expectedDate: '2024-01-08',
-        actualDate: '',
-        status: 'approved',
-        operator: 'admin',
-        remark: '文具采购订单'
-      },
-      {
-        id: 4,
-        orderNo: 'PO20240104004',
-        supplierName: '惠普耗材',
-        totalAmount: 49900,
-        orderDate: '2024-01-04 16:45:00',
-        expectedDate: '2024-01-12',
-        actualDate: '',
-        status: 'pending',
-        operator: 'admin',
-        remark: '打印耗材采购订单'
-      },
-      {
-        id: 5,
-        orderNo: 'PO20240105005',
-        supplierName: '永艺家具',
-        totalAmount: 85000,
-        orderDate: '2024-01-05 11:00:00',
-        expectedDate: '2024-01-15',
-        actualDate: '',
-        status: 'pending',
-        operator: 'admin',
-        remark: '办公家具采购订单'
+    // 调用后端API
+    const response = await request.get('/purchase-order/list', {
+      params: {
+        orderNo: searchKeyword.value || undefined,
+        supplierId: searchSupplierId.value || undefined,
+        status: searchStatus.value || undefined
       }
-    ]
+    })
     
-    // 模拟供应商数据
-    const mockSuppliers = [
-      { id: 1, supplierName: '得力办公' },
-      { id: 2, supplierName: '晨光文具' },
-      { id: 3, supplierName: '科技数码' },
-      { id: 4, supplierName: '齐心办公' },
-      { id: 5, supplierName: '惠普耗材' },
-      { id: 6, supplierName: '永艺家具' }
-    ]
+    orders.value = response.data || []
+    total.value = orders.value.length
     
-    // 模拟物资数据
-    const mockMaterials = [
-      { id: 1, name: 'A4打印纸', specification: '80g 500张/包', unit: '包', price: 25.5 },
-      { id: 2, name: '黑色中性笔', specification: '0.5mm', unit: '支', price: 2.5 },
-      { id: 3, name: '鼠标', specification: '有线 USB', unit: '个', price: 89.0 },
-      { id: 4, name: '键盘', specification: '机械键盘 青轴', unit: '个', price: 299.0 },
-      { id: 5, name: '服务器', specification: '2U机架式服务器', unit: '台', price: 15000.0 },
-      { id: 6, name: '硒鼓', specification: 'HP LaserJet Pro M404n', unit: '个', price: 499.0 },
-      { id: 7, name: '办公椅', specification: '人体工学椅', unit: '把', price: 1500.0 },
-      { id: 8, name: '办公桌', specification: '1.4m', unit: '张', price: 1200.0 }
-    ]
+    // 获取供应商列表
+    const supplierResponse = await request.get('/supplier/list', {
+      params: {
+        status: 1
+      }
+    })
+    suppliers.value = supplierResponse.data || []
     
-    // 模拟搜索功能
-    let filteredOrders = mockOrders
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredOrders = mockOrders.filter(order => 
-        order.orderNo.toLowerCase().includes(keyword) ||
-        order.supplierName.toLowerCase().includes(keyword)
-      )
-    }
-    
-    if (searchStatus.value) {
-      filteredOrders = filteredOrders.filter(order => 
-        order.status === searchStatus.value
-      )
-    }
-    
-    // 模拟日期范围过滤
-    if (dateRange.value && dateRange.value.length === 2) {
-      filteredOrders = filteredOrders.filter(order => {
-        const recordDate = new Date(order.orderDate)
-        const startDate = new Date(dateRange.value[0])
-        const endDate = new Date(dateRange.value[1])
-        return recordDate >= startDate && recordDate <= endDate
-      })
-    }
-    
-    orders.value = filteredOrders
-    total.value = filteredOrders.length
-    suppliers.value = mockSuppliers
-    materials.value = mockMaterials
+    // 获取物资列表
+    const materialResponse = await request.get('/material/list', {
+      params: {
+        status: 1
+      }
+    })
+    materials.value = materialResponse.data || []
   } catch (error) {
     console.error('获取订单列表失败:', error)
     ElMessage.error('获取订单列表失败')
@@ -593,12 +500,10 @@ const fetchOrders = async () => {
 // 获取状态名称
 const getStatusName = (status) => {
   const statusMap = {
-    pending: '待审批',
-    approved: '已批准',
-    rejected: '已拒绝',
-    shipped: '已发货',
-    completed: '已完成',
-    canceled: '已取消'
+    0: '待审核',
+    1: '已审核',
+    2: '已入库',
+    3: '已取消'
   }
   return statusMap[status] || status
 }
@@ -606,12 +511,10 @@ const getStatusName = (status) => {
 // 获取状态颜色
 const getStatusColor = (status) => {
   const colorMap = {
-    pending: 'info',
-    approved: 'primary',
-    rejected: 'danger',
-    shipped: 'warning',
-    completed: 'success',
-    canceled: 'danger'
+    0: 'info',
+    1: 'primary',
+    2: 'success',
+    3: 'danger'
   }
   return colorMap[status] || 'info'
 }
@@ -857,16 +760,27 @@ const handleSaveOrder = async () => {
         return
       }
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 状态映射：字符串 -> 整数（根据数据库定义）
+      const statusMap = {
+        'pending': 0,
+        'approved': 1,
+        'received': 2,
+        'canceled': 3
+      }
+      
+      // 准备提交数据
+      const submitData = {
+        ...orderForm,
+        status: statusMap[orderForm.status] || 0
+      }
       
       if (orderForm.id) {
         // 编辑订单
-        console.log('编辑订单:', orderForm)
+        await request.put('/purchase-order/update', submitData)
         ElMessage.success('订单编辑成功')
       } else {
         // 新增订单
-        console.log('新增订单:', orderForm)
+        await request.post('/purchase-order/add', submitData)
         ElMessage.success('订单新增成功')
       }
       

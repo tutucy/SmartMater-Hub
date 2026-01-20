@@ -382,109 +382,26 @@ const totalAmount = computed(() => {
 const fetchInboundRecords = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟入库记录数据
-    const mockRecords = [
-      {
-        id: 1,
-        inboundNo: 'RK20240101001',
-        inboundType: 'purchase',
-        supplierName: '得力办公',
-        totalQuantity: 150,
-        totalAmount: 3825,
-        operator: 'admin',
-        inboundDate: '2024-01-01 10:00:00',
-        status: '1'
-      },
-      {
-        id: 2,
-        inboundNo: 'RK20240102002',
-        inboundType: 'production',
-        supplierName: '内部生产',
-        totalQuantity: 100,
-        totalAmount: 5000,
-        operator: 'admin',
-        inboundDate: '2024-01-02 14:30:00',
-        status: '1'
-      },
-      {
-        id: 3,
-        inboundNo: 'RK20240103003',
-        inboundType: 'purchase',
-        supplierName: '晨光文具',
-        totalQuantity: 300,
-        totalAmount: 750,
-        operator: 'admin',
-        inboundDate: '2024-01-03 09:15:00',
-        status: '1'
-      },
-      {
-        id: 4,
-        inboundNo: 'RK20240104004',
-        inboundType: 'transfer',
-        supplierName: '仓库A',
-        totalQuantity: 50,
-        totalAmount: 4450,
-        operator: 'admin',
-        inboundDate: '2024-01-04 16:45:00',
-        status: '0'
+    // 调用后端API
+    const response = await request.get('/inbound/list', {
+      params: {
+        inboundNo: searchKeyword.value || undefined,
+        inboundType: searchInboundType.value || undefined,
+        startDate: dateRange.value && dateRange.value[0] || undefined,
+        endDate: dateRange.value && dateRange.value[1] || undefined
       }
-    ]
+    })
     
-    // 模拟搜索功能
-    let filteredRecords = mockRecords
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredRecords = mockRecords.filter(record => 
-        record.inboundNo.toLowerCase().includes(keyword) ||
-        record.supplierName.toLowerCase().includes(keyword)
-      )
-    }
+    inboundRecords.value = response.data || []
+    total.value = inboundRecords.value.length
     
-    if (searchInboundType.value) {
-      filteredRecords = filteredRecords.filter(record => 
-        record.inboundType === searchInboundType.value
-      )
-    }
-    
-    // 模拟日期范围过滤
-    if (dateRange.value && dateRange.value.length === 2) {
-      filteredRecords = filteredRecords.filter(record => {
-        const recordDate = new Date(record.inboundDate)
-        const startDate = new Date(dateRange.value[0])
-        const endDate = new Date(dateRange.value[1])
-        return recordDate >= startDate && recordDate <= endDate
-      })
-    }
-    
-    inboundRecords.value = filteredRecords
-    total.value = filteredRecords.length
-    
-    // 模拟供应商数据
-    suppliers.value = [
-      { id: 1, name: '得力办公' },
-      { id: 2, name: '晨光文具' },
-      { id: 3, name: '科技数码' },
-      { id: 4, name: '内部生产' },
-      { id: 5, name: '仓库A' }
-    ]
-    
-    // 模拟物资数据
-    materials.value = [
-      { id: 1, name: 'A4打印纸', specification: '80g 500张/包', unit: '包', price: 25.5 },
-      { id: 2, name: '黑色中性笔', specification: '0.5mm', unit: '支', price: 2.5 },
-      { id: 3, name: '鼠标', specification: '有线 USB', unit: '个', price: 89.0 },
-      { id: 4, name: '键盘', specification: '机械键盘 青轴', unit: '个', price: 299.0 }
-    ]
-    
-    // 模拟采购订单数据
-    purchaseOrders.value = [
-      { id: 1, orderNo: 'PO20240101001' },
-      { id: 2, orderNo: 'PO20240102002' },
-      { id: 3, orderNo: 'PO20240103003' }
-    ]
+    // 获取物资列表
+    const materialResponse = await request.get('/material/list', {
+      params: {
+        status: 1
+      }
+    })
+    materials.value = materialResponse.data || []
   } catch (error) {
     console.error('获取入库记录失败:', error)
     ElMessage.error('获取入库记录失败')
@@ -603,12 +520,8 @@ const handleDeleteInbound = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除入库:', row)
+  .then(async () => {
+    await request.delete(`/inbound/${row.id}`)
     ElMessage.success('入库记录删除成功')
     // 刷新入库记录
     fetchInboundRecords()
@@ -691,16 +604,24 @@ const handleSaveInbound = async () => {
         return
       }
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 计算总数量和总金额
+      const totalQuantity = inboundForm.details.reduce((sum, item) => sum + item.quantity, 0)
+      const totalAmount = inboundForm.details.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+      
+      // 准备提交数据
+      const submitData = {
+        ...inboundForm,
+        totalQuantity: totalQuantity,
+        totalAmount: totalAmount
+      }
       
       if (inboundForm.id) {
         // 编辑入库记录
-        console.log('编辑入库记录:', inboundForm)
+        await request.put('/inbound/update', submitData)
         ElMessage.success('入库记录编辑成功')
       } else {
         // 新增入库记录
-        console.log('新增入库记录:', inboundForm)
+        await request.post('/inbound/add', submitData)
         ElMessage.success('入库记录新增成功')
       }
       

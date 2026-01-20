@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.OutboundRecordMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.entity.OutboundRecord">
+        <id column="id" property="id"/>
+        <result column="outbound_no" property="outboundNo"/>
+        <result column="outbound_type" property="outboundType"/>
+        <result column="recipient" property="recipient"/>
+        <result column="department" property="department"/>
+        <result column="customer_info" property="customerInfo"/>
+        <result column="purpose" property="purpose"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="operator" property="operator"/>
+        <result column="remark" property="remark"/>
+        <result column="status" property="status"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM outbound_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByOutboundNo" resultMap="BaseResultMap">
+        SELECT * FROM outbound_record WHERE outbound_no = #{outboundNo}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM outbound_record
+        <where>
+            <if test="outboundNo != null and outboundNo != ''">
+                AND outbound_no LIKE CONCAT('%', #{outboundNo}, '%')
+            </if>
+            <if test="outboundType != null and outboundType != ''">
+                AND outbound_type = #{outboundType}
+            </if>
+            <if test="recipient != null and recipient != ''">
+                AND recipient LIKE CONCAT('%', #{recipient}, '%')
+            </if>
+            <if test="department != null and department != ''">
+                AND department = #{department}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND DATE(create_time) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND DATE(create_time) &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.entity.OutboundRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO outbound_record (outbound_no, outbound_type, recipient, department, customer_info, purpose, total_quantity, total_amount, operator, remark, status, creator_id)
+        VALUES (#{outboundNo}, #{outboundType}, #{recipient}, #{department}, #{customerInfo}, #{purpose}, #{totalQuantity}, #{totalAmount}, #{operator}, #{remark}, #{status}, #{creatorId})
+    </insert>
+
+    <update id="update" parameterType="org.example.entity.OutboundRecord">
+        UPDATE outbound_record
+        <set>
+            <if test="recipient != null">
+                recipient = #{recipient},
+            </if>
+            <if test="department != null">
+                department = #{department},
+            </if>
+            <if test="customerInfo != null">
+                customer_info = #{customerInfo},
+            </if>
+            <if test="purpose != null">
+                purpose = #{purpose},
+            </if>
+            <if test="totalQuantity != null">
+                total_quantity = #{totalQuantity},
+            </if>
+            <if test="totalAmount != null">
+                total_amount = #{totalAmount},
+            </if>
+            <if test="operator != null">
+                operator = #{operator},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM outbound_record WHERE id = #{id}
+    </delete>
+
+</mapper>
