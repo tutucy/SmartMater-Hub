@@ -16,9 +16,7 @@
           @mouseleave="handleMouseLeave"
         >
           <el-icon class="menu-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path v-html="menu.icon"></path>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="menu.icon"></svg>
           </el-icon>
           <span class="menu-text">{{ menu.title }}</span>
           
@@ -36,9 +34,7 @@
                 @click="handleMenuClick(item.path)"
               >
                 <el-icon class="dropdown-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path v-html="item.icon"></path>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
                 </el-icon>
                 <span class="dropdown-item-text">{{ item.title }}</span>
               </div>

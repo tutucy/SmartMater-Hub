@@ -247,8 +247,8 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at top right, rgba(64, 158, 255, 0.2) 0%, transparent 50%),
-              radial-gradient(circle at bottom left, rgba(64, 158, 255, 0.1) 0%, transparent 50%);
+  background: radial-gradient(circle at top right, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at bottom left, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
   pointer-events: none;
   transition: var(--transition-base);
   animation: sidebarGlow 8s ease-in-out infinite alternate;

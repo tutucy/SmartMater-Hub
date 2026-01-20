@@ -7,13 +7,13 @@
 
 /* CSS变量定义 - 主题色 */
 :root {
-  /* 主色调 - 渐变蓝色系 */
-  --primary-color: #409eff;
-  --primary-light: #66b1ff;
-  --primary-dark: #337ecc;
-  --primary-lighter: #8cc8ff;
-  --primary-darker: #2a6fb9;
-  --primary-opacity: rgba(64, 158, 255, 0.1);
+  /* 主色调 - 渐变紫色系 */
+  --primary-color: #667eea;
+  --primary-light: #8897f4;
+  --primary-dark: #5565c0;
+  --primary-lighter: #a681ff;
+  --primary-darker: #4c56b8;
+  --primary-opacity: rgba(102, 126, 234, 0.1);
   
   /* 辅助色 - 丰富色彩 */
   /* 成功色 */

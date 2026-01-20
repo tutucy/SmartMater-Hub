@@ -217,7 +217,7 @@ const fetchStatistics = async () => {
     })
     
     stockDistributionData.value = Object.keys(categoryMap).map((name, index) => {
-      const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#ff6b6b', '#4caf50', '#ff9800', '#795548', '#607d8b']
+      const colors = ['#667eea', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#ff6b6b', '#4caf50', '#ff9800', '#795548', '#607d8b']
       return {
         name: name,
         value: categoryMap[name],
@@ -358,12 +358,12 @@ const initStockTrendChart = () => {
       type: 'line',
       smooth: true,
       itemStyle: {
-        color: '#409eff'
+        color: '#667eea'
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(64, 158, 255, 0.5)' },
-          { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+          { offset: 0, color: 'rgba(102, 126, 234, 0.5)' },
+          { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
         ])
       }
     }]
@@ -441,7 +441,7 @@ onMounted(async () => {
       totalCategories.value = 8
       
       stockDistributionData.value = [
-        { name: '电子设备', value: 30, color: '#409eff' },
+        { name: '电子设备', value: 30, color: '#667eea' },
         { name: '办公用品', value: 670, color: '#67c23a' },
         { name: '办公耗材', value: 5, color: '#e6a23c' },
         { name: '办公家具', value: 15, color: '#f56c6c' },

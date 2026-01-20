@@ -9,6 +9,8 @@ import java.util.List;
 @Mapper
 public interface PurchaseOrderItemMapper {
 
+    PurchaseOrderItem selectById(@Param("id") Integer id);
+
     List<PurchaseOrderItem> selectList(@Param("orderId") Integer orderId);
 
     List<PurchaseOrderItem> selectByOrderId(@Param("orderId") Integer orderId);

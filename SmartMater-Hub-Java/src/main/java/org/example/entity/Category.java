@@ -6,10 +6,13 @@ public class Category {
     private Integer id;
     private String name;
     private Integer parentId;
+    private String parentName;
+    private String description;
     private Integer level;
     private String path;
     private Integer sort;
     private Integer status;
+    private Integer materialCount;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -35,6 +38,22 @@ public class Category {
 
     public void setParentId(Integer parentId) {
         this.parentId = parentId;
+    }
+
+    public String getParentName() {
+        return parentName;
+    }
+
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getLevel() {
@@ -67,6 +86,14 @@ public class Category {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Integer getMaterialCount() {
+        return materialCount;
+    }
+
+    public void setMaterialCount(Integer materialCount) {
+        this.materialCount = materialCount;
     }
 
     public LocalDateTime getCreateTime() {

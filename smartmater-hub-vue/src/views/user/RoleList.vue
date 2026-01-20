@@ -186,62 +186,16 @@ const roleRules = {
 const fetchRoles = async () => {
   loading.value = true
   try {
-    // 调用角色列表API
-    // 由于我们使用的是mock数据，这里模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟角色列表数据
-    const mockRoles = [
-      {
-        id: 1,
-        name: '管理员',
-        code: 'admin',
-        description: '系统管理员，拥有所有权限',
-        status: '1',
-        createTime: '2024-01-01 10:00:00',
-        updateTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: 2,
-        name: '采购员',
-        code: 'purchaser',
-        description: '负责物资采购相关操作',
-        status: '1',
-        createTime: '2024-01-02 14:30:00',
-        updateTime: '2024-01-02 14:30:00'
-      },
-      {
-        id: 3,
-        name: '仓库管理员',
-        code: 'warehouse_manager',
-        description: '负责仓库物资管理',
-        status: '1',
-        createTime: '2024-01-03 09:15:00',
-        updateTime: '2024-01-03 09:15:00'
-      },
-      {
-        id: 4,
-        name: '普通员工',
-        code: 'employee',
-        description: '普通员工，只能查看物资信息',
-        status: '1',
-        createTime: '2024-01-04 16:45:00',
-        updateTime: '2024-01-04 16:45:00'
+    const response = await request.get('/role/list', {
+      params: {
+        keyword: searchKeyword.value,
+        page: currentPage.value,
+        size: pageSize.value
       }
-    ]
+    })
     
-    // 模拟搜索功能
-    let filteredRoles = mockRoles
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredRoles = mockRoles.filter(role => 
-        role.name.toLowerCase().includes(keyword) ||
-        role.description.toLowerCase().includes(keyword)
-      )
-    }
-    
-    roleList.value = filteredRoles
-    total.value = filteredRoles.length
+    roleList.value = response.data || []
+    total.value = response.total || 0
   } catch (error) {
     console.error('获取角色列表失败:', error)
     ElMessage.error('获取角色列表失败')
@@ -290,24 +244,15 @@ const handleSaveRole = async () => {
     if (valid) {
       dialogLoading.value = true
       
-      // 调用保存角色API
-      // 由于我们使用的是mock数据，这里模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       if (roleForm.id) {
-        // 编辑角色
-        console.log('编辑角色:', roleForm)
+        await request.put('/role/update', roleForm)
         ElMessage.success('角色编辑成功')
       } else {
-        // 添加角色
-        console.log('添加角色:', roleForm)
+        await request.post('/role/add', roleForm)
         ElMessage.success('角色添加成功')
       }
       
-      // 关闭对话框
       dialogVisible.value = false
-      
-      // 刷新角色列表
       fetchRoles()
     }
   } catch (error) {
@@ -343,28 +288,33 @@ const handleDeleteRole = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 调用删除角色API
-    // 由于我们使用的是mock数据，这里模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除角色:', row)
-    ElMessage.success('角色删除成功')
-    // 刷新角色列表
-    fetchRoles()
+  .then(async () => {
+    try {
+      await request.delete('/role/delete', { id: row.id })
+      ElMessage.success('角色删除成功')
+      fetchRoles()
+    } catch (error) {
+      console.error('删除角色失败:', error)
+      ElMessage.error('删除角色失败')
+    }
   })
   .catch(() => {
-    // 取消删除
   })
 }
 
 // 处理状态变化
-const handleStatusChange = (row) => {
-  console.log('角色状态变化:', row)
-  // 调用更新角色状态API
-  // 由于我们使用的是mock数据，这里模拟API调用
-  ElMessage.success('角色状态更新成功')
+const handleStatusChange = async (row) => {
+  try {
+    await request.put('/role/update', {
+      id: row.id,
+      status: row.status
+    })
+    ElMessage.success('角色状态更新成功')
+  } catch (error) {
+    console.error('更新角色状态失败:', error)
+    ElMessage.error('更新角色状态失败')
+    row.status = row.status === '1' ? '0' : '1'
+  }
 }
 
 // 分页相关

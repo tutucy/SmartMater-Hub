@@ -195,103 +195,18 @@ const categoryRules = {
 const fetchCategories = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // 模拟分类列表数据
-    const mockCategories = [
-      {
-        id: 1,
-        name: '办公用品',
-        parentId: '',
-        parentName: '无',
-        description: '办公所需的各种用品',
-        level: 1,
-        materialCount: 10,
-        createTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: 2,
-        name: '文具',
-        parentId: '1',
-        parentName: '办公用品',
-        description: '各种办公文具',
-        level: 2,
-        materialCount: 5,
-        createTime: '2024-01-01 10:30:00'
-      },
-      {
-        id: 3,
-        name: '耗材',
-        parentId: '1',
-        parentName: '办公用品',
-        description: '办公耗材',
-        level: 2,
-        materialCount: 3,
-        createTime: '2024-01-01 11:00:00'
-      },
-      {
-        id: 4,
-        name: '设备',
-        parentId: '',
-        parentName: '无',
-        description: '办公设备',
-        level: 1,
-        materialCount: 8,
-        createTime: '2024-01-02 09:00:00'
-      },
-      {
-        id: 5,
-        name: '电子设备',
-        parentId: '4',
-        parentName: '设备',
-        description: '电子办公设备',
-        level: 2,
-        materialCount: 6,
-        createTime: '2024-01-02 09:30:00'
-      },
-      {
-        id: 6,
-        name: '家具',
-        parentId: '4',
-        parentName: '设备',
-        description: '办公家具',
-        level: 2,
-        materialCount: 2,
-        createTime: '2024-01-02 10:00:00'
-      },
-      {
-        id: 7,
-        name: '生产物资',
-        parentId: '',
-        parentName: '无',
-        description: '生产所需的物资',
-        level: 1,
-        materialCount: 15,
-        createTime: '2024-01-03 14:00:00'
+    const response = await request.get('/category/list', {
+      params: {
+        parentId: searchParentId.value || undefined,
+        name: searchKeyword.value || undefined
       }
-    ]
+    })
     
-    // 模拟搜索功能
-    let filteredCategories = mockCategories
-    if (searchKeyword.value) {
-      const keyword = searchKeyword.value.toLowerCase()
-      filteredCategories = mockCategories.filter(category => 
-        category.name.toLowerCase().includes(keyword)
-      )
-    }
-    
-    if (searchParentId.value) {
-      filteredCategories = filteredCategories.filter(category => 
-        category.parentId === searchParentId.value
-      )
-    }
-    
-    categoryList.value = filteredCategories
-    total.value = filteredCategories.length
+    categoryList.value = response.data || []
+    total.value = response.data?.length || 0
     
     // 更新分类选项（用于上级分类选择）
-    categoryOptions.value = mockCategories
+    categoryOptions.value = response.data || []
   } catch (error) {
     console.error('获取分类列表失败:', error)
     ElMessage.error('获取分类列表失败')
@@ -339,23 +254,15 @@ const handleSaveCategory = async () => {
     if (valid) {
       dialogLoading.value = true
       
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       if (categoryForm.id) {
-        // 编辑分类
-        console.log('编辑分类:', categoryForm)
+        await request.put('/category/update', categoryForm)
         ElMessage.success('分类编辑成功')
       } else {
-        // 添加分类
-        console.log('添加分类:', categoryForm)
+        await request.post('/category/add', categoryForm)
         ElMessage.success('分类添加成功')
       }
       
-      // 关闭对话框
       dialogVisible.value = false
-      
-      // 刷新分类列表
       fetchCategories()
     }
   } catch (error) {
@@ -390,19 +297,12 @@ const handleDeleteCategory = (row) => {
       type: 'warning'
     }
   )
-  .then(() => {
-    // 调用删除分类API
-    // 模拟API调用
-    return new Promise(resolve => setTimeout(resolve, 800))
-  })
-  .then(() => {
-    console.log('删除分类:', row)
+  .then(async () => {
+    await request.delete(`/category/${row.id}`)
     ElMessage.success('分类删除成功')
-    // 刷新分类列表
     fetchCategories()
   })
   .catch(() => {
-    // 取消删除
   })
 }
 

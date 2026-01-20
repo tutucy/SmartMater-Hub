@@ -6,41 +6,62 @@
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="parent_id" property="parentId"/>
+        <result column="description" property="description"/>
         <result column="level" property="level"/>
         <result column="path" property="path"/>
         <result column="sort" property="sort"/>
         <result column="status" property="status"/>
+        <result column="material_count" property="materialCount"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <select id="selectById" resultMap="BaseResultMap">
-        SELECT * FROM category WHERE id = #{id}
+    <resultMap id="ListResultMap" type="org.example.entity.Category" extends="BaseResultMap">
+        <result column="parent_name" property="parentName"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="ListResultMap">
+        SELECT c.*,
+               p.name as parent_name,
+               (SELECT COUNT(*) FROM material WHERE category_id = c.id) as material_count
+        FROM category c
+        LEFT JOIN category p ON c.parent_id = p.id
+        WHERE c.id = #{id}
     </select>
 
-    <select id="selectList" resultMap="BaseResultMap">
-        SELECT * FROM category
+    <select id="selectList" resultMap="ListResultMap">
+        SELECT c.*,
+               p.name as parent_name,
+               (SELECT COUNT(*) FROM material WHERE category_id = c.id) as material_count
+        FROM category c
+        LEFT JOIN category p ON c.parent_id = p.id
         <where>
             <if test="parentId != null">
-                AND parent_id = #{parentId}
+                AND c.parent_id = #{parentId}
             </if>
             <if test="name != null and name != ''">
-                AND name LIKE CONCAT('%', #{name}, '%')
+                AND c.name LIKE CONCAT('%', #{name}, '%')
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND c.status = #{status}
             </if>
         </where>
-        ORDER BY sort ASC, create_time DESC
+        ORDER BY c.sort ASC, c.create_time DESC
     </select>
 
-    <select id="selectTree" resultMap="BaseResultMap">
-        SELECT * FROM category WHERE status = 1 ORDER BY sort ASC, create_time DESC
+    <select id="selectTree" resultMap="ListResultMap">
+        SELECT c.*,
+               p.name as parent_name,
+               (SELECT COUNT(*) FROM material WHERE category_id = c.id) as material_count
+        FROM category c
+        LEFT JOIN category p ON c.parent_id = p.id
+        WHERE c.status = 1 
+        ORDER BY c.sort ASC, c.create_time DESC
     </select>
 
     <insert id="insert" parameterType="org.example.entity.Category" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO category (name, parent_id, level, path, sort, status)
-        VALUES (#{name}, #{parentId}, #{level}, #{path}, #{sort}, #{status})
+        INSERT INTO category (name, parent_id, description, level, path, sort, status)
+        VALUES (#{name}, #{parentId}, #{description}, #{level}, #{path}, #{sort}, #{status})
     </insert>
 
     <update id="update" parameterType="org.example.entity.Category">
@@ -51,6 +72,9 @@
             </if>
             <if test="parentId != null">
                 parent_id = #{parentId},
+            </if>
+            <if test="description != null">
+                description = #{description},
             </if>
             <if test="level != null">
                 level = #{level},
